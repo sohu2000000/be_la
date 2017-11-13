@@ -57,7 +57,7 @@ void * agilio_isa_4000_proccess(void * inbuf, unsigned int in_len, void * outbuf
         msg->acc_type, msg->buffer);
 
     /*output feedback */
-    strcpy(out_msg->buffer, "I am VM, agilio_isa_4000_proccess result\n");
+    strcpy(out_msg->buffer, "I am Hypervisor, agilio_isa_4000_proccess result\n");
     out_msg->acc_type = msg->acc_type;
     *out_len_ptr = sizeof(acc_proc_msg_t);    
     

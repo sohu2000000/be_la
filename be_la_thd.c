@@ -51,7 +51,7 @@ thd_msg_t g_thd_msg;
 ******************************************************************************/
 void * vm_channel_thread(void * data){
 
-    int read_size = -1, num = -1, maxfd  = -1, in_len = 0, out_len = 0;
+    int num = -1, maxfd  = -1, in_len = 0, out_len = 0;
     int channel_vendor = 0, channel_model = 0; 
     char buffer[BUF_LEN] = {'\0'}, feedback[BUF_LEN] = {'\0'}, path[BUF_LEN] = {'\0'};
     acc_proc_msg_t inbuf, outbuf;
@@ -68,8 +68,6 @@ void * vm_channel_thread(void * data){
     channel_vendor = cmd->vendor;
     channel_model = cmd->model;
     strcpy(path, cmd->vmpath);    
-    BE_LA_LOG("path = %s\n", path);
-
     
     g_handler.vseria_fd = unix_socket_clnt_init(path);
     if(-1  == g_handler.vseria_fd){
@@ -96,24 +94,21 @@ void * vm_channel_thread(void * data){
         {
             if(FD_ISSET(g_handler.vseria_fd, &rfds))
             {
-                /* 1. read meessage from VM */
-                in_len = 0;
+                in_len = 0; 
                 out_len = 0;
                 memset(&inbuf, 0x0, sizeof(inbuf));
                 memset(&outbuf, 0x0, sizeof(outbuf));
-                
+
+                /* 1. read meessage from VM */
                 in_len = read(g_handler.vseria_fd, &inbuf, sizeof(inbuf));
                 if(in_len > 0){
                     BE_LA_LOG("in_len = %d\n", in_len);                    
                 } 
 
-                // 2. TODO: process messsage
-                
+                /* 2. process messsage */               
                 be_la_acc_process(channel_vendor, channel_model, &inbuf, in_len, &outbuf, &out_len);
-                //memset(buffer, 0x0, sizeof(buffer));
 
-                /*give the feedback*/
-                /* 3. write result to VM */
+                /* 3. write feedback result to VM */
                 BE_LA_LOG("Please write the feedback message out_len = %d \n", out_len);                   
                 if (-1 == write(g_handler.vseria_fd, &outbuf, out_len)){
                     perror("write feedback failed: ");
