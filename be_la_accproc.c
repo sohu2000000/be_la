@@ -103,8 +103,8 @@ int be_la_acc_process(int vendor, int model,
     int retval = 0;    
     acc_proc_msg_t * msg = NULL;
     
-    if(NULL == inbuf){
-        BE_LA_ERROR("data is NULL");
+    if(NULL == inbuf || NULL == outbuf || NULL == out_len_ptr){
+        BE_LA_ERROR("bad param");
         retval = -1;
     }
 
@@ -117,7 +117,7 @@ int be_la_acc_process(int vendor, int model,
             BE_LA_ERROR("g_acc_plugins[%d][%d].pfunc is not registed \n", vendor, model);
             break;
         }
-        g_acc_plugins[vendor][model].pfunc(inbuf); 
+        g_acc_plugins[vendor][model].pfunc(inbuf, in_len, outbuf, out_len_ptr); 
         break;
     
     case MSG_TYPE_MAX:

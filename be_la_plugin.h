@@ -3,7 +3,7 @@
 
 #include "be_la_vendor.h"
 
-typedef void* (* pPluginFunc)(void * data);
+typedef void* (* pPluginFunc)(void * inbuf, unsigned int in_len, void * outbuf, unsigned int * out_len_ptr);
 
 
 typedef struct tag_acc_plugin{
