@@ -99,7 +99,7 @@ void msg_debug_buffer_dump(char * buf MSG_ATTR_USED, unsigned int len MSG_ATTR_U
 ******************************************************************************/
 int be_la_acc_process(int vendor, int model,
                             void * inbuf, unsigned int in_len, 
-                            void * outbuf, int out_len){
+                            void * outbuf, int * out_len_ptr){
     int retval = 0;    
     acc_proc_msg_t * msg = NULL;
     

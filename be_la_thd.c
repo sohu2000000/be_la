@@ -109,7 +109,7 @@ void * vm_channel_thread(void * data){
 
                 // 2. TODO: process messsage
                 
-                be_la_acc_process(channel_vendor, channel_model, &inbuf, in_len, &outbuf, out_len);
+                be_la_acc_process(channel_vendor, channel_model, &inbuf, in_len, &outbuf, &out_len);
                 //memset(buffer, 0x0, sizeof(buffer));
 
                 /*give the feedback*/
