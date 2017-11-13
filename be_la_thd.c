@@ -104,7 +104,7 @@ void * vm_channel_thread(void * data){
                 
                 in_len = read(g_handler.vseria_fd, &inbuf, sizeof(inbuf));
                 if(in_len > 0){
-                    BE_LA_LOG("read_size = %d\n", in_len);                    
+                    BE_LA_LOG("in_len = %d\n", in_len);                    
                 } 
 
                 // 2. TODO: process messsage
@@ -113,15 +113,12 @@ void * vm_channel_thread(void * data){
                 //memset(buffer, 0x0, sizeof(buffer));
 
                 /*give the feedback*/
-                strcpy(feedback, "Got It, I am Hypervisor");   
-                
                 /* 3. write result to VM */
-                BE_LA_LOG("Please write the feedback message: \n");                   
-                if (-1 == write(g_handler.vseria_fd, feedback, sizeof(feedback))){
+                BE_LA_LOG("Please write the feedback message out_len = %d \n", out_len);                   
+                if (-1 == write(g_handler.vseria_fd, &outbuf, out_len)){
                     perror("write feedback failed: ");
                     break;
-                }
-
+                }                
             }
         }        
     }
