@@ -29,6 +29,16 @@
 
 acc_plugin_t g_acc_plugins[VENDOR_MAX][MODEL_MAX];
 
+/******************************************************************************
+* DESCRIPTION:
+*       none
+* INPUTS:
+*       none
+* OUTPUTS:
+*       none
+* RETURNS:
+*       none
+******************************************************************************/
 void * agilio_isa_4000_proccess(void * data){
     
     acc_proc_msg_t * msg = NULL;
@@ -47,6 +57,16 @@ void * agilio_isa_4000_proccess(void * data){
 }
 
 
+/******************************************************************************
+* DESCRIPTION:
+*       none
+* INPUTS:
+*       none
+* OUTPUTS:
+*       none
+* RETURNS:
+*       none
+******************************************************************************/
 /*plugin reg interface*/
 int be_la_plugin_reg(int vendor, int model, pPluginFunc pfunc){
     int retval = 0;
@@ -62,11 +82,32 @@ out:
     return retval;
 }
 
+
+/******************************************************************************
+* DESCRIPTION:
+*       none
+* INPUTS:
+*       none
+* OUTPUTS:
+*       none
+* RETURNS:
+*       none
+******************************************************************************/
 int be_la_plugin_unreg(int vendor, int model){
     g_acc_plugins[vendor][model].pfunc = NULL;
 }
 
 
+/******************************************************************************
+* DESCRIPTION:
+*       none
+* INPUTS:
+*       none
+* OUTPUTS:
+*       none
+* RETURNS:
+*       none
+******************************************************************************/
 int be_la_plugin_init(void){
     int retval = 0;
     
@@ -76,6 +117,17 @@ int be_la_plugin_init(void){
     return retval;
 }
 
+
+/******************************************************************************
+* DESCRIPTION:
+*       none
+* INPUTS:
+*       none
+* OUTPUTS:
+*       none
+* RETURNS:
+*       none
+******************************************************************************/
 void be_la_plugin_exit(void){
 
     memset(g_acc_plugins, 0x0, sizeof(g_acc_plugins));
