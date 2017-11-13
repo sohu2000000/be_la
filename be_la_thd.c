@@ -51,7 +51,7 @@ thd_msg_t g_thd_msg;
 ******************************************************************************/
 void * vm_channel_thread(void * data){
 
-    int read_size = -1, num = -1, maxfd  = -1;
+    int read_size = -1, num = -1, maxfd  = -1, in_len = 0, out_len = 0;
     int channel_vendor = 0, channel_model = 0; 
     char buffer[BUF_LEN] = {'\0'}, feedback[BUF_LEN] = {'\0'}, path[BUF_LEN] = {'\0'};
     acc_proc_msg_t inbuf, outbuf;
@@ -97,15 +97,19 @@ void * vm_channel_thread(void * data){
             if(FD_ISSET(g_handler.vseria_fd, &rfds))
             {
                 /* 1. read meessage from VM */
+                in_len = 0;
+                out_len = 0;
                 memset(&inbuf, 0x0, sizeof(inbuf));
-                read_size = read(g_handler.vseria_fd, &inbuf, sizeof(inbuf));
-                if(read_size > 0){
-                    BE_LA_LOG("read_size = %d\n", read_size);                    
+                memset(&outbuf, 0x0, sizeof(outbuf));
+                
+                in_len = read(g_handler.vseria_fd, &inbuf, sizeof(inbuf));
+                if(in_len > 0){
+                    BE_LA_LOG("read_size = %d\n", in_len);                    
                 } 
 
                 // 2. TODO: process messsage
                 
-                be_la_acc_process(channel_vendor, channel_model, &inbuf, read_size);
+                be_la_acc_process(channel_vendor, channel_model, &inbuf, in_len, &outbuf, out_len);
                 //memset(buffer, 0x0, sizeof(buffer));
 
                 /*give the feedback*/

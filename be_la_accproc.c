@@ -97,17 +97,19 @@ void msg_debug_buffer_dump(char * buf MSG_ATTR_USED, unsigned int len MSG_ATTR_U
 * RETURNS:
 *       none
 ******************************************************************************/
-int be_la_acc_process(int vendor, int model, void * data, unsigned int len){
+int be_la_acc_process(int vendor, int model,
+                            void * inbuf, unsigned int in_len, 
+                            void * outbuf, int out_len){
     int retval = 0;    
     acc_proc_msg_t * msg = NULL;
     
-    if(NULL == data){
+    if(NULL == inbuf){
         BE_LA_ERROR("data is NULL");
         retval = -1;
     }
 
-    msg = (acc_proc_msg_t *)data;    
-    msg_debug_buffer_dump(data, len);
+    msg = (acc_proc_msg_t *)inbuf;    
+    msg_debug_buffer_dump(inbuf, in_len);
     switch(msg->msg_type){
     case MSG_TYPE_DATA:
     case MSG_TYPE_DATA_MORE:
@@ -115,7 +117,7 @@ int be_la_acc_process(int vendor, int model, void * data, unsigned int len){
             BE_LA_ERROR("g_acc_plugins[%d][%d].pfunc is not registed \n", vendor, model);
             break;
         }
-        g_acc_plugins[vendor][model].pfunc(data); 
+        g_acc_plugins[vendor][model].pfunc(inbuf); 
         break;
     
     case MSG_TYPE_MAX:
