@@ -1,0 +1,3 @@
+[submodule "vnf/samplevnf"]
+	path = vnf/samplevnf
+	url = https://github.com/opnfv/samplevnf.git
