@@ -49,13 +49,15 @@ ACCSH_HANDLE g_handler;
 ******************************************************************************/
 static void usage(void){
     fprintf(stderr, "Usage: \n");
+    fprintf(stderr, "\t <-r, --register>          register an acc card \n");    
+    fprintf(stderr, "\t <-R, --unregister>        unregister an acc card \n");
     fprintf(stderr, "\t <-v, --vendor>            acc card vendor: <netronome | xilinx> \n");
     fprintf(stderr, "\t <-m, --model>             acc card product: <agilio_isa_4000 | vu3p | vu9p> \n");
     fprintf(stderr, "\t <-u, --uuid>              vm uuid which to use this channel\n");
     fprintf(stderr, "\t <-c, --channel>           channel path\n");    
     fprintf(stderr, "\t <-t, --type>              acc type: <flow | compress>\n");
     fprintf(stderr, "Example: \n");
-    fprintf(stderr, "\taccsh -v netronome -m agilio_isa_4000 -u 4dea22b3-1d52-d8f3-2516-782e98000000 -c /tmp/vserial -t flow -t compress\n");
+    fprintf(stderr, "\taccsh -r -v netronome -m agilio_isa_4000 -u 4dea22b3-1d52-d8f3-2516-782e98000000 -c /tmp/vserial -t flow -t compress\n");
 }
 
 /******************************************************************************
@@ -76,13 +78,15 @@ int main(int argc, char** argv) {
     cmd_hdr_t * cmd = NULL;
 
     /*long options*/
-    static const char * optstring = "v:m:c:u:t:";
+    static const char * optstring = "v:m:c:u:t:rRV";
 	static const struct option longopts[] = {
 		{ "vendor",     required_argument,  NULL, 'v' },
 		{ "model",	    required_argument,  NULL, 'm' },
 		{ "channel",    required_argument,  NULL, 'c' },
 		{ "uuid",       required_argument,  NULL, 'u' },
 		{ "type",       required_argument,  NULL, 't' },
+		{ "register",   no_argument,        NULL, 'r' },
+		{ "unregister", no_argument,        NULL, 'R' },
 		{ "version",    no_argument,        NULL, 'V' },
 		{ NULL,		    no_argument,        NULL, 0 }
 	};
@@ -99,14 +103,7 @@ int main(int argc, char** argv) {
     memset(data, 0x0, total);
         
     cmd = (cmd_hdr_t * )data;
-    while(-1 != (c = getopt_long(argc, argv, optstring, longopts, NULL))){
-        #if 0
-        printf("c = %c\n",c);
-        printf("optarg = %s\n", optarg);
-        printf("optind = %d\n", optind);
-        printf("argv[optind - 1] = %s\n", argv[optind - 1]);
-        #endif
-        
+    while(-1 != (c = getopt_long(argc, argv, optstring, longopts, NULL))){        
         switch(c){
         case 'v':
             if(0 == strcmp(optarg,"netronome")){
@@ -136,6 +133,16 @@ int main(int argc, char** argv) {
                 strcpy(cmd->vm_uuid, optarg);
             }
             break;
+        case 'r':
+            printf("c = %c\n",c);
+            printf("optarg = %s\n", optarg);                   
+            cmd->cmd_type = CMD_TYPE_REGISTER;
+            break;
+        case 'R':
+            printf("c = %c\n",c);
+            printf("optarg = %s\n", optarg);                   
+            cmd->cmd_type = CMD_TYPE_UNREGISTER;
+            break;
         case 't':
             if(0 == strcmp(optarg,"flow")){
                 printf("c = %c\n",c);
@@ -159,6 +166,7 @@ int main(int argc, char** argv) {
 
 
     if(0 == cmd->vendor 
+        || 0 == cmd->cmd_type
         || 0 == cmd->model 
         || 0 == cmd->acc_type 
         || '\0' == cmd->vmpath[0] 
