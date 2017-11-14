@@ -9,11 +9,8 @@
 #define SRC_COMMON_ACC_UNIX_COMMON_H_
 
 #include <inttypes.h>
-//extern const char* const g_unix_path ;
-#define ACC_UNIX_PATH "/var/run/acc_service_path.sock"
-//static char* s_unix_client_format = "/var/run/acc_agent_path%s";
 
-struct acc_unix_msg_header {
+struct acc_msg_header {
 	int total_len;
 #define ACC_UNIX_HELLO      1
 #define ACC_UNIX_ADD_FLOWS  2
@@ -25,7 +22,8 @@ struct acc_unix_msg_header {
 	int code;
 	char data[0];
 };
-
+#if 0
+#define ACC_UNIX_PATH "/var/run/acc_service_path.sock"
 static inline int acc_connect_unix_socket(void*args) {
 	int fd;
 	if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
@@ -54,6 +52,7 @@ static inline int acc_connect_unix_socket(void*args) {
 static inline void acc_unix_socket_close(int fd) {
 	close(fd);
 }
+#endif
 
 static inline ssize_t _iovec_copy(struct iovec*array, ssize_t array_len,
 		ssize_t index, ssize_t offset, struct iovec*remain_array) {
@@ -107,7 +106,7 @@ static inline int _readn(void*handle, char*msg, ssize_t len) {
 
 //尝试从handle中读取一条message消息
 static inline int acc_unix_recv_message(void*handle,
-		struct acc_unix_msg_header*hdr, char*body, ssize_t *recv_n) {
+		struct acc_msg_header*hdr, char*body, ssize_t *recv_n) {
 	//int fd = (intptr_t) handle;
 
 	if (_readn(handle, (char*)hdr, sizeof(*hdr))) {
@@ -160,7 +159,7 @@ static inline ssize_t _get_next_send_iovec(struct iovec*array,
 
 //如果发送成功，返回true,否则false
 static inline int acc_unix_send_message(void*handle,
-		struct acc_unix_msg_header*hdr, const char*body, const ssize_t body_len) {
+		struct acc_msg_header*hdr, const char*body, const ssize_t body_len) {
 
 	int fd = (intptr_t) handle;
 	ssize_t number = 2;
@@ -186,8 +185,8 @@ static inline int acc_unix_send_message(void*handle,
 }
 
 static inline int acc_unix_send_recv(void*handle,
-		struct acc_unix_msg_header*send_hdr, char*send_body,
-		ssize_t send_body_len, struct acc_unix_msg_header*recv_hdr,
+		struct acc_msg_header*send_hdr, char*send_body,
+		ssize_t send_body_len, struct acc_msg_header*recv_hdr,
 		char*recv_body, ssize_t*recv_len) {
 	if (!acc_unix_send_message(handle, send_hdr, send_body, send_body_len)) {
 		//send fail

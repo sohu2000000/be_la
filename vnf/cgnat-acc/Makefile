@@ -1,11 +1,12 @@
 
-all: cgnapt_accelerate.o acc_client.o acc_vsocket.o acc_unix_vsocket.o acc_log.o
-	gcc -Wall -g -o cgnat_accelerate  $^ $(INCLUDE_PATH)
+
+all: cgnapt_accelerate.o acc_client.o acc_vsocket.o acc_channel_vsocket.o acc_log.o
+	gcc -Wall -g -o cgnat_accelerate  $^ 
 
 %.o:%.c
-	gcc -Wall -g -c -o $@ $< $(INCLUDE_PATH)
+	gcc -Wall -g -c -o $@ $< 
 %.o:%.c %.h
-	gcc -Wall -g -c -o $@ $< $(INCLUDE_PATH)
+	gcc -Wall -g -c -o $@ $< 
 
 
 

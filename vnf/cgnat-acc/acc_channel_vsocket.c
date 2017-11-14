@@ -1,5 +1,5 @@
 /*
- * acc_vsocket_unixsocket.c
+ * acc_channel_vsocket.c
  *
  *  Created on: Oct 27, 2017
  *      Author: anlang
@@ -18,14 +18,16 @@
 #include <assert.h>
 
 #include "acc_log.h"
-#include "acc_unix_common.h"
 #include "acc_flow.h"
 #include "acc_vsocket.h"
 #include "acc_module.h"
+#include "acc_msg.h"
+#include "acc_channel.h"
 
 //建立连接
-void* acc_unix_connect(void*args) {
-	int fd = acc_connect_unix_socket(args);
+void* acc_channel_connect(void*args) {
+	//int fd = acc_connect_unix_socket(args);
+	int fd = acc_channel_open();
 	if (fd < 0) {
 		return NULL;
 	}
@@ -40,11 +42,11 @@ void* acc_unix_connect(void*args) {
 	}
 	hostname_len = strlen(hostname);
 
-	struct acc_unix_msg_header hello;
+	struct acc_msg_header hello;
 	hello.type = ACC_UNIX_HELLO;
 	hello.total_len = sizeof(hello) + hostname_len;
 
-	struct acc_unix_msg_header replay;
+	struct acc_msg_header replay;
 
 	if (acc_unix_send_recv((void*) ((intptr_t) fd), &hello, hostname,
 			hostname_len, &replay, NULL, NULL)) {
@@ -59,19 +61,19 @@ void* acc_unix_connect(void*args) {
 	ACC_ERROR("connect: Connection refused!\n");
 
 	CLOSE_SOCKET: {
-		acc_unix_socket_close(fd);
+		acc_channel_close(fd);
 		return NULL;
 	}
 }
 
 //添加流
-error_code acc_unix_add_flows(void*handle, struct acc_flow*flows, int n_flows) {
-	struct acc_unix_msg_header header;
+error_code acc_channel_add_flows(void*handle, struct acc_flow*flows, int n_flows) {
+	struct acc_msg_header header;
 	header.type = ACC_UNIX_ADD_FLOWS;
-	header.total_len = sizeof(struct acc_unix_msg_header)
+	header.total_len = sizeof(struct acc_msg_header)
 			+ (sizeof(*flows) * n_flows);
 
-	struct acc_unix_msg_header replay;
+	struct acc_msg_header replay;
 
 	if (acc_unix_send_recv(handle, &header, (char*)flows, sizeof(*flows) * n_flows,
 			&replay, NULL, NULL)) {
@@ -91,12 +93,12 @@ error_code acc_unix_add_flows(void*handle, struct acc_flow*flows, int n_flows) {
 }
 
 //断开连接
-void acc_unix_disconnect(void*handle) {
-	struct acc_unix_msg_header bye;
+void acc_channel_disconnect(void*handle) {
+	struct acc_msg_header bye;
 	bye.type = ACC_UNIX_DISCONNECT;
 	bye.total_len = sizeof(bye);
 
-	struct acc_unix_msg_header replay;
+	struct acc_msg_header replay;
 
 	if (acc_unix_send_recv(handle, &bye, NULL, 0, &replay, NULL, NULL)) {
 		ACC_ERROR("send message to server fail!\n");
@@ -112,21 +114,21 @@ void acc_unix_disconnect(void*handle) {
 
 	CLOSE_SOCKET: {
 		int fd = (intptr_t) handle;
-		acc_unix_socket_close(fd);
+		acc_channel_close(fd);
 	}
 }
 
 int acc_vsocket_unix_register()
 {
-	struct acc_vsocket_type unix_socket=
+	struct acc_vsocket_type channel_vsocket=
 	{
-			.type = "unix-socket",
-			.connect = acc_unix_connect,
-			.add_flows = acc_unix_add_flows,
-			.disconnect = acc_unix_disconnect
+			.type = "virtio-channel",
+			.connect = acc_channel_connect,
+			.add_flows = acc_channel_add_flows,
+			.disconnect = acc_channel_disconnect
 	};
 
-	return acc_vsocket_type_register(&unix_socket);
+	return acc_vsocket_type_register(&channel_vsocket);
 }
 
 module_init(1,acc_vsocket_unix_register);
