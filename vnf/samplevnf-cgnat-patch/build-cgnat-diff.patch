@@ -1,0 +1,156 @@
+diff --git a/Makefile b/Makefile
+index 7c14693..d6712f4 100644
+--- a/Makefile
++++ b/Makefile
+@@ -21,10 +21,10 @@ RTE_TARGET ?= x86_64-native-linuxapp-gcc
+ 
+ TARGETS      := all clean
+ VNF_DIR      := VNFs
+-ACL          := $(VNF_DIR)/vACL
+-FW           := $(VNF_DIR)/vFW
++#ACL          := $(VNF_DIR)/vACL
++#FW           := $(VNF_DIR)/vFW
+ CGNAPT       := $(VNF_DIR)/vCGNAPT
+-UDP_Replay   := $(VNF_DIR)/UDP_Replay
++#UDP_Replay   := $(VNF_DIR)/UDP_Replay
+ 
+ subdirs      := $(ACL) $(CGNAPT) $(FW) $(UDP_Replay)
+ 
+diff --git a/VNFs/vCGNAPT/Makefile b/VNFs/vCGNAPT/Makefile
+index e349f62..1f64122 100644
+--- a/VNFs/vCGNAPT/Makefile
++++ b/VNFs/vCGNAPT/Makefile
+@@ -107,8 +107,8 @@ SRCS-$(CONFIG_RTE_LIBRTE_PIPELINE) += cgnapt_pcp_fe.c
+ SRCS-$(CONFIG_RTE_LIBRTE_PIPELINE) += lib_sip_alg.c
+ SRCS-$(CONFIG_RTE_LIBRTE_PIPELINE) += lib_ftp_alg.c
+ 
+-CFLAGS += -O3
+-CFLAGS += -DIPV6
++#CFLAGS += -O3
++#CFLAGS += -DIPV6
+ CFLAGS += -DCHECKSUM_REQ
+ #CFLAGS += -DPCP_ENABLE
+ #CFLAGS += -DSIP_ALG
+diff --git a/common/VIL/conntrack/rte_ct_synproxy.c b/common/VIL/conntrack/rte_ct_synproxy.c
+index 967596d..5f4666f 100644
+--- a/common/VIL/conntrack/rte_ct_synproxy.c
++++ b/common/VIL/conntrack/rte_ct_synproxy.c
+@@ -159,7 +159,7 @@ rte_sp_get_random_seq_number(void)
+ }
+ 
+ 
+-static int8_t rte_ct_ipversion(void *i_hdr)
++int8_t rte_ct_ipversion(void *i_hdr)
+ {
+ 	uint8_t *ihdr = (uint8_t *)i_hdr;
+ 	int8_t hdr_chk = *ihdr;
+diff --git a/common/VIL/l2l3_stack/lib_arp.c b/common/VIL/l2l3_stack/lib_arp.c
+index 0162f82..d5e15b8 100644
+--- a/common/VIL/l2l3_stack/lib_arp.c
++++ b/common/VIL/l2l3_stack/lib_arp.c
+@@ -1485,6 +1485,7 @@ void request_arp(uint8_t port_id, uint32_t ip)
+ 	l2_phy_interface_t *link;
+ 	link = ifm_get_port(port_id);
+ 	struct rte_mbuf *arp_pkt = lib_arp_pkt;
++	arp_pkt->port = port_id;
+ 
+ 	if (arp_pkt == NULL) {
+ 		if (ARPICMP_DEBUG)
+@@ -1694,9 +1695,10 @@ void process_arpicmp_pkt(struct rte_mbuf *pkt, l2_phy_interface_t *port)
+ 			RTE_LOG(INFO, LIBARP,
+ 				"Invalid protocol address length - not processing ARP req\n");
+ 		else {
+-			if (port->ipv4_list == NULL) {
++			if (!port || port->ipv4_list == NULL) {
+ 				RTE_LOG(INFO, LIBARP,
+ 					"Ports IPV4 List is NULL.. Unable to Process\n");
++				printf( "Ports IPV4 List is NULL.. Unable to Process\n");
+ 				return;
+ 			}
+ 
+diff --git a/tools/vnf_build.sh b/tools/vnf_build.sh
+index 4f6212c..4690c20 100755
+--- a/tools/vnf_build.sh
++++ b/tools/vnf_build.sh
+@@ -24,7 +24,7 @@ echo "--------------------------------------------------------------------------
+ HUGEPGSZ=`cat /proc/meminfo  | grep Hugepagesize | cut -d : -f 2 | tr -d ' '`
+ MODPROBE="/sbin/modprobe"
+ INSMOD="/sbin/insmod"
+-DPDK_DOWNLOAD="http://dpdk.org/browse/dpdk/snapshot/dpdk-16.04.zip"
++DPDK_DOWNLOAD="http://dpdk.org/browse/dpdk/snapshot/dpdk-16.11.zip"
+ DPDK_DIR=$VNF_CORE/dpdk
+ 
+ #
+@@ -81,7 +81,7 @@ setup_env()
+ 	echo
+ 	echo "Checking network connectivity..."
+ 	# b. Check for internet connections
+-	wget -T 20 -t 3 --spider http://www.google.com > /dev/null 2>&1
++	wget -T 20 -t 3 --spider http://www.baidu.com > /dev/null 2>&1
+ 	if [ "$?" != 0 ]; then
+ 		while true; do
+ 			read -p "No Internet connection. Are you behind a proxy (y/n)? " yn
+@@ -167,7 +167,7 @@ download_dpdk_zip()
+ 		wget ${DPDK_DOWNLOAD}
+ 	fi
+ 	unzip -o ${DPDK_DOWNLOAD##*/}
+-	mv $VNF_CORE/dpdk-16.04 $VNF_CORE/dpdk
++	mv $VNF_CORE/dpdk-16.11 $VNF_CORE/dpdk
+ }
+ 
+ install_dpdk()
+@@ -182,15 +182,21 @@ install_dpdk()
+ 	export RTE_TARGET=x86_64-native-linuxapp-gcc
+ 
+ 	pushd $DPDK_DIR
+-	echo "Apply dpdk custom patches..."
+-	patch -p1 < $VNF_CORE/patches/dpdk_custom_patch/i40e-fix-link-management.patch
+-	patch -p1 < $VNF_CORE/patches/dpdk_custom_patch/i40e-fix-Rx-hang-when-disable-LLDP.patch
+-	patch -p1 < $VNF_CORE/patches/dpdk_custom_patch/i40e-fix-link-status-change-interrupt.patch
+-	patch -p1 < $VNF_CORE/patches/dpdk_custom_patch/i40e-fix-VF-bonded-device-link-down.patch
+-	patch -p1 < $VNF_CORE/patches/dpdk_custom_patch/disable-acl-debug-logs.patch
+-	patch -p1 < $VNF_CORE/patches/dpdk_custom_patch/set-log-level-to-info.patch
+-
+-	make -j install T=$RTE_TARGET
++	#echo "Apply dpdk custom patches..."
++	#patch -p1 < $VNF_CORE/patches/dpdk_custom_patch/i40e-fix-link-management.patch
++	#patch -p1 < $VNF_CORE/patches/dpdk_custom_patch/i40e-fix-Rx-hang-when-disable-LLDP.patch
++	#patch -p1 < $VNF_CORE/patches/dpdk_custom_patch/i40e-fix-link-status-change-interrupt.patch
++	#patch -p1 < $VNF_CORE/patches/dpdk_custom_patch/i40e-fix-VF-bonded-device-link-down.patch
++	#patch -p1 < $VNF_CORE/patches/dpdk_custom_patch/disable-acl-debug-logs.patch
++	#patch -p1 < $VNF_CORE/patches/dpdk_custom_patch/set-log-level-to-info.patch
++
++	echo "add netnorm"
++	sed 's/CONFIG_RTE_BUILD_SHARED_LIB=y/CONFIG_RTE_BUILD_SHARED_LIB=n/' -i config/common_base
++        sed 's/CONFIG_RTE_LIBRTE_NFP_PMD=n/CONFIG_RTE_LIBRTE_NFP_PMD=y/' -i config/common_base
++        sed 's@SRCS-y += ethtool/igb/igb_main.c@#SRCS-y += ethtool/igb/igb_main.c@g' -i lib/librte_eal/linuxapp/kni/Makefile
++
++	#make -j install T=$RTE_TARGET
++	make EXTRA_CFLAGS="-O0 -g" -j8 install T=$RTE_TARGET DESTDIR=install
+ 	if [ $? -ne 0 ] ; then
+ 		echo "Failed to build dpdk, please check the errors."
+ 		return
+@@ -210,9 +216,11 @@ install_dpdk()
+ setup_hugepages()
+ {
+ 	#----
+-	Pages=16
++	#Pages=16
++	Pages=2
+ 	if [[ "$HUGEPGSZ" = "2048kB" ]] ; then
+-		Pages=8192
++		#Pages=8192
++		Pages=1024
+ 	fi
+ 	if [ ! "`grep nr_hugepages /etc/sysctl.conf`" ] ; then
+ 		echo "vm.nr_hugepages=$Pages" | sudo tee /etc/sysctl.conf
+@@ -255,7 +263,8 @@ build_vnfs()
+ 	export RTE_TARGET=x86_64-native-linuxapp-gcc
+ 	pushd $VNF_CORE
+ 	make clean
+-	make || { echo -e "\nVNF: Make failed\n"; }
++	#make || { echo -e "\nVNF: Make failed\n"; }
++	make V=1 EXTRA_CFLAGS="-O0 -g" || { echo -e "\nVNF: Make failed\n"; }
+ 	popd
+ }
+ 
