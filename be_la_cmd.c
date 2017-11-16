@@ -83,6 +83,7 @@ int be_la_cmd_process(void * data)
         break;
     case CMD_TYPE_UNREGISTER:
         // TODO: 
+        BE_LA_LOG("unregister an acc card\n");
         break;
     default:
         BE_LA_ERROR("unsupported command type\n");

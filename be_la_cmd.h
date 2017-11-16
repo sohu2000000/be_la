@@ -15,7 +15,7 @@ typedef struct tag_cmd_hdr{
 
 
 enum tag_cmd_type {
-	CMD_TYPE_REGISTER = 0, 
+	CMD_TYPE_REGISTER = 1, 
     CMD_TYPE_UNREGISTER, 
     CMD_TYPE_MAX
 };
