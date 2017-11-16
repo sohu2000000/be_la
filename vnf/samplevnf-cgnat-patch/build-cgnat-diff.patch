@@ -45,7 +45,7 @@ index 967596d..5f4666f 100644
  	uint8_t *ihdr = (uint8_t *)i_hdr;
  	int8_t hdr_chk = *ihdr;
 diff --git a/common/VIL/l2l3_stack/lib_arp.c b/common/VIL/l2l3_stack/lib_arp.c
-index 0162f82..d5e15b8 100644
+index 0162f82..e34f4dc 100644
 --- a/common/VIL/l2l3_stack/lib_arp.c
 +++ b/common/VIL/l2l3_stack/lib_arp.c
 @@ -1485,6 +1485,7 @@ void request_arp(uint8_t port_id, uint32_t ip)
@@ -68,6 +68,15 @@ index 0162f82..d5e15b8 100644
  				return;
  			}
  
+@@ -1710,7 +1712,7 @@ void process_arpicmp_pkt(struct rte_mbuf *pkt, l2_phy_interface_t *port)
+ 							DYNAMIC_ARP);
+ 
+ 				} else {
+-					RTE_LOG(INFO, LIBARP,"ARP requested IP address mismatches interface IP - discarding\n");
++					//RTE_LOG(INFO, LIBARP,"ARP requested IP address mismatches interface IP - discarding\n");
+ 				}
+ 			}
+ 			/// revise conditionals to allow processing of requests with target ip = this ip and
 diff --git a/tools/vnf_build.sh b/tools/vnf_build.sh
 index 4f6212c..4690c20 100755
 --- a/tools/vnf_build.sh
