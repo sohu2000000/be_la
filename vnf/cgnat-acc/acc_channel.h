@@ -14,7 +14,6 @@
 #include <string.h>
 #include <errno.h>
 
-#include "acc_log.h"
 
 int acc_unixsocket_channel_open(void*args);
 void acc_unixsocket_channel_close(int fd);

@@ -16,7 +16,7 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include "acc_log.h"
+#include "be_la_log.h"
 
 #define CHANNEL_PATH "/dev/virtio-ports/pv-mon"
 
