@@ -22,37 +22,6 @@ struct acc_msg_header {
 	int code;
 	char data[0];
 };
-#if 0
-#define ACC_UNIX_PATH "/var/run/acc_service_path.sock"
-static inline int acc_connect_unix_socket(void*args) {
-	int fd;
-	if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
-		return -1;
-	}
-
-	struct sockaddr_un un;
-	memset(&un, 0, sizeof(un));
-	un.sun_family = AF_UNIX;
-	//snprintf(un.sun_path, sizeof(un.sun_path),ACC_UNIX_PATH, (uintptr_t)args);
-	strncpy(un.sun_path, ACC_UNIX_PATH, sizeof(un.sun_path) - 1);
-	//unlink(un.sun_path);
-
-	//connect server
-	if (connect(fd, (struct sockaddr*) &un, sizeof(un)) == -1) {
-		ACC_ERROR("cannot connect to the server!\n");
-		close(fd);
-		return -1;
-		//return (void*) ((intptr_t) -1);
-	}
-
-	//return (void*) ((intptr_t) fd);
-	return fd;
-}
-
-static inline void acc_unix_socket_close(int fd) {
-	close(fd);
-}
-#endif
 
 static inline ssize_t _iovec_copy(struct iovec*array, ssize_t array_len,
 		ssize_t index, ssize_t offset, struct iovec*remain_array) {
@@ -207,4 +176,6 @@ static inline int acc_unix_send_recv(void*handle,
 	return 0;
 }
 
+int be_acc_message_process(struct acc_context*state, int type, char*message,
+		int len, char*out_msg, int* out_len);
 #endif /* SRC_COMMON_ACC_UNIX_COMMON_H_ */
