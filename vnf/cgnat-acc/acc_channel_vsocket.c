@@ -20,7 +20,7 @@
 #include "acc_log.h"
 #include "acc_flow.h"
 #include "acc_vsocket.h"
-#include "acc_module.h"
+#include "be_module.h"
 #include "acc_msg.h"
 #include "acc_channel.h"
 

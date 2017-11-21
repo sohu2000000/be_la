@@ -1,4 +1,5 @@
 
+include_path=-I ../../plugins/common
 objects :=$(patsubst %.c,%.o,$(wildcard *.c))
 
 all: $(objects)
@@ -6,9 +7,9 @@ all: $(objects)
 	#gcc -Wall -g -o cgnat_accelerate  $^ 
 
 %.o:%.c
-	gcc -Wall -g -c -o $@ $< 
+	gcc -Wall -g -c -o $@ $<  $(include_path)
 %.o:%.c %.h
-	gcc -Wall -g -c -o $@ $< 
+	gcc -Wall -g -c -o $@ $<  $(include_path)
 
 
 
