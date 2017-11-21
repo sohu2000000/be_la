@@ -5,35 +5,26 @@
  *      Author: anlang
  */
 
-#include "be_plugin.h"
+#include <stdint.h>
+#include <assert.h>
+#include <sys/uio.h>
+#include <poll.h>
+#include <errno.h>
+
+#include "be_acc_context.h"
+#include "be_la_log.h"
 #include "be_module.h"
+#include "be_plugin.h"
+#include "be_acc_msg.h"
 
-int acc_netronome_proccess(void * inbuf, unsigned int in_len, void * outbuf,
-		unsigned int * out_len) {
+int acc_netronome_proccess(void * inbuf, uint32_t in_len, void * outbuf,
+		int32_t * out_len) {
 
-#if 0
-	acc_proc_msg_t * msg = NULL, *out_msg = NULL;
 
-	if (NULL == inbuf || NULL == outbuf || NULL == out_len_ptr) {
-		BE_LA_LOG("agilio_isa_4000_proccess\n");
-		return NULL;
-	}
-
-	msg = (acc_proc_msg_t*) inbuf;
-	out_msg = (acc_proc_msg_t*) outbuf;
-
-	/*input process*/
-	BE_LA_LOG("agilio_isa_4000_proccess acc_type: 0x%x, buffer: %s\n",
-			msg->acc_type, msg->buffer);
-
-	/*output feedback */
-	strcpy(out_msg->buffer,
-			"I am Hypervisor, agilio_isa_4000_proccess result\n");
-	out_msg->acc_type = msg->acc_type;
-	*out_len_ptr = sizeof(acc_proc_msg_t);
-#endif
-
-	return -1;
+	struct acc_msg_header* header = (struct acc_msg_header*)inbuf;
+	assert(header->total_len == in_len);
+	return be_acc_message_process(NULL, header->type, header->data,
+			header->total_len - sizeof(*header),outbuf, out_len);
 }
 
 static acc_plugin_t s_netronome_plugin = { .pfunc = acc_netronome_proccess,

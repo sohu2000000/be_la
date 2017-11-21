@@ -8,6 +8,6 @@ clean:
 
 
 %.o:%.c
-	gcc -Wall -g -c -o $@ $< -I../common -I../../
+	gcc -Wall -g -c -o $@ $< -I../common -I../../common -I../../ -I../../message
 %.o:%.c %.h
 	gcc -Wall -g -c -o $@ $< 
