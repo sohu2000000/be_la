@@ -16,19 +16,27 @@
 
 #include "acc_log.h"
 
-#define CHANNEL_PATH "/dev/virtio-ports/pv-mon"
+int acc_unixsocket_channel_open(void*args);
+void acc_unixsocket_channel_close(int fd);
+int acc_virtio_channel_open(void);
+void acc_virtio_channel_close(int fd);
+
+//#define ACC_CHANNEL_USE_UNIXSOCKET 1
 
 static inline int acc_channel_open(void) {
-	int fd = open(CHANNEL_PATH, O_RDWR);
-	if (fd < 0) {
-		ACC_ERROR("open channel '%s' fail,error=%s!\n", CHANNEL_PATH,strerror(errno));
-		return -1;
-	}
-	return fd;
+#if ACC_CHANNEL_USE_UNIXSOCKET
+	return acc_unixsocket_channel_open(NULL);
+#else
+	return acc_virtio_channel_open();
+#endif
 }
 
 static inline void acc_channel_close(int fd) {
-	close(fd);
+#if ACC_CHANNEL_USE_UNIXSOCKET
+	acc_unixsocket_channel_close(fd);
+#else
+	acc_virtio_channel_close(fd);
+#endif
 }
 
 #endif /* VNF_CGNAT_ACC_ACC_CHANNEL_H_ */

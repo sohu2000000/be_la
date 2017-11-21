@@ -1,6 +1,7 @@
 
+objects :=$(patsubst %.c,%.o,$(wildcard *.c))
 
-all: cgnapt_accelerate.o acc_client.o acc_vsocket.o acc_channel_vsocket.o acc_log.o
+all: $(objects)
 	ar rcs libcgnatacc.a $^
 	#gcc -Wall -g -o cgnat_accelerate  $^ 
 
@@ -12,4 +13,4 @@ all: cgnapt_accelerate.o acc_client.o acc_vsocket.o acc_channel_vsocket.o acc_lo
 
 
 clean:
-	-rm -rf *.o *.a cgnat_accelerate
+	-rm -rf $(objects) *.a cgnat_accelerate
