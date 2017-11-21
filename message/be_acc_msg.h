@@ -10,6 +10,8 @@
 
 #include <inttypes.h>
 
+#include "be_acc_context.h"
+
 struct acc_msg_header {
 	int total_len;
 #define ACC_UNIX_HELLO      1

@@ -21,21 +21,24 @@
 *   Feng Liu 28/10/2017  Creation
 *****************************************************************/
 
-#include <sys/un.h>
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/un.h>
+
 #include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <pthread.h>
 #include <stdlib.h>
-
+#include <unistd.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/un.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/un.h>
 
 #include "be_la_main.h"
-#include "be_la_log.h"
 #include "be_la_cmd.h"
+#include "common/be_la_log.h"
 
 
 /******************************************************************************
@@ -68,7 +71,7 @@ int unix_socket_clnt_init(char * socket_path){
     
     bzero((void *)&address, sizeof(struct sockaddr_un));
     address.sun_family = AF_UNIX;
-    strncpy((void *)address.sun_path, socket_path, sizeof(struct sockaddr_un) - 1);
+    strncpy((char*)address.sun_path, socket_path, sizeof(struct sockaddr_un) - 1);
     
     ret = connect(sockfd, (struct sockaddr *)&address, sizeof(address));
     if(ret == -1){

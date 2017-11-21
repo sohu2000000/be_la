@@ -26,15 +26,15 @@
 #include <string.h>
 
 #include "be_la_comm.h"
-#include "be_la_log.h"
 #include "be_la_cmd.h"
 #include "be_la_thd.h"
 #include "be_la_vendor.h"
+#include "common/be_la_log.h"
 
 extern thd_msg_t g_thd_msg;
 
-#include "be_la_plugin.h"
-extern acc_plugin_t g_acc_plugins[VENDOR_MAX][MODEL_MAX];
+//#include "be_la_plugin.h"
+//extern acc_plugin_t g_acc_plugins[VENDOR_MAX][MODEL_MAX];
 
 
 /******************************************************************************

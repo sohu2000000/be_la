@@ -47,7 +47,7 @@ int be_plugin_is_registed(enum tag_vendor vendor, enum tag_model model) {
 }
 
 int be_plugin_callback(enum tag_vendor vendor, enum tag_model model, void*inbuf,
-		uint32_t in_len, void*outbuf, uint32_t*out_len) {
+		uint32_t in_len, void*outbuf, int32_t*out_len) {
 	int ret;
 	acc_plugin_t* plugin = &g_acc_plugins[vendor][model];
 

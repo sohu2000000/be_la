@@ -29,9 +29,9 @@
 #include "be_la_main.h"
 #include "be_la_thd.h"
 #include "be_la_cmd.h"
-#include "be_la_log.h"
 #include "be_la_vendor.h"
-#include "be_la_plugin.h"
+#include "common/be_la_log.h"
+//#include "be_la_plugin.h"
 
 
 #define VSERIAL_UNIX_PATH   "/tmp/vserial"
@@ -65,7 +65,7 @@ int main(void) {
 #endif
 
     retval = be_la_vendor_init();
-    retval = be_la_plugin_init();
+    //retval = be_la_plugin_init();
     retval = thread_module_init();
     
     /*last to initialization, since it is a for(;;)*/
@@ -73,7 +73,7 @@ int main(void) {
         
 out:
     thread_module_exit();        
-    be_la_plugin_exit();
+    //be_la_plugin_exit();
     be_la_vendor_exit();
     return retval;
 

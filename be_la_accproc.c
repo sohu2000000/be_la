@@ -25,12 +25,10 @@
 #include <stdio.h>
 
 #include "be_la_accproc.h"
-#include "be_la_plugin.h"
-#include "be_la_log.h"
+#include "be_plugin.h"
 #include "be_la_api.h"
 #include "be_la_common.h"
-
-extern acc_plugin_t g_acc_plugins[VENDOR_MAX][MODEL_MAX];
+#include "common/be_la_log.h"
 
 /******************************************************************************
 * DESCRIPTION:
@@ -100,12 +98,12 @@ void msg_debug_buffer_dump(char * buf MSG_ATTR_USED, unsigned int len MSG_ATTR_U
 int be_la_acc_process(int vendor, int model,
                             void * inbuf, unsigned int in_len, 
                             void * outbuf, int * out_len_ptr){
-    int retval = 0;    
+    int retval = -1;
     acc_proc_msg_t * msg = NULL;
     
     if(NULL == inbuf || NULL == outbuf || NULL == out_len_ptr){
         BE_LA_ERROR("bad param");
-        retval = -1;
+        goto OUT;
     }
 
     msg = (acc_proc_msg_t *)inbuf;    
@@ -113,20 +111,21 @@ int be_la_acc_process(int vendor, int model,
     switch(msg->msg_type){
     case MSG_TYPE_DATA:
     case MSG_TYPE_DATA_MORE:
-        if(NULL == g_acc_plugins[vendor][model].pfunc){
+    {
+    	if(!be_plugin_is_registed(vendor,model)) {
             BE_LA_ERROR("g_acc_plugins[%d][%d].pfunc is not registed \n", vendor, model);
-            break;
+            goto OUT;
         }
-        g_acc_plugins[vendor][model].pfunc(inbuf, in_len, outbuf, out_len_ptr); 
+    	retval = be_plugin_callback(vendor,model,inbuf,in_len,outbuf,out_len_ptr);
         break;
-    
+    }
     case MSG_TYPE_MAX:
     default:
         BE_LA_LOG("unsupport msg type: %d\n", msg->msg_type);
         break;        
     }
         
-out:
+OUT:
     return retval;
 
 }

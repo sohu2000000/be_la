@@ -33,6 +33,7 @@
 #include "be_la_thd.h"
 #include "be_la_api.h"
 #include "be_la_cmd.h"
+#include "be_la_accproc.h"
 
 extern BE_LA_COMM_HANDLE g_handler;
 

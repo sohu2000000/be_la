@@ -14,6 +14,7 @@
 #include <assert.h>
 #include <poll.h>
 
+#include "be_acc_context.h"
 #include "acc_flow.h"
 #include "acc_rule_be.h"
 #include "be_module.h"

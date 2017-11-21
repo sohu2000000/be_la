@@ -28,4 +28,7 @@ void be_la_log_print(int fd,const char*fmt,...);
 #define BE_LA_DEBUG(fmt,...)\
 	BE_LA_LOG_COMMON(BE_LA_LEVEL_DEBUG,fmt,##__VA_ARGS__)
 	
+#define ACC_DEBUG BE_LA_DEBUG
+#define ACC_LOG   BE_LA_LOG
+#define ACC_ERROR BE_LA_ERROR
 #endif
