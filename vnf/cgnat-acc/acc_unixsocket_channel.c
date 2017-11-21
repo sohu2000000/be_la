@@ -34,7 +34,7 @@ int acc_unixsocket_channel_open(void*args) {
 
 	//connect server
 	if (connect(fd, (struct sockaddr*) &un, sizeof(un)) == -1) {
-		ACC_ERROR("cannot connect to the server!\n");
+		ACC_ERROR("cannot connect to the server %s!\n",ACC_UNIX_PATH);
 		close(fd);
 		return -1;
 	}
