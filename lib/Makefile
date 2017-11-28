@@ -12,7 +12,8 @@ download-libevent2:
 	if [ ! -d $(LIBEVENT_DIR_NAME) ]; then tar -zxvf $(LIBEVENT_TAR_NAME) ; fi;
 
 compile-libevent2:
-	(cd $(LIBEVENT_DIR_NAME) ; ./configure ; make ; cp .libs/libevent.so .. ; )
+	if [ ! -e ./libevent.so ]; then (cd $(LIBEVENT_DIR_NAME) ; ./configure ; make ; cp .libs/libevent.so .. ; ) ; fi;
 
 clean:
 	rm -rf $(LIBEVENT_DIR_NAME)
+	rm -rf libevent.so

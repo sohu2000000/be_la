@@ -1,6 +1,6 @@
 export BE_ROOT=$(CURDIR)
 
-SUB_MODULE=lib common message plugins rule be_la #vnf
+SUB_MODULE=lib common message plugins rule be_la vnf
 #MODULE_BEFORE=
 #MODULE_AFTER=
 #CLEAN_AFTER=

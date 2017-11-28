@@ -43,7 +43,7 @@ void* acc_channel_connect(void*args) {
 	hostname_len = strlen(hostname);
 
 	struct acc_msg_header hello;
-	hello.type = ACC_UNIX_HELLO;
+	hello.msg_type = ACC_UNIX_HELLO;
 	hello.total_len = sizeof(hello) + hostname_len;
 
 	struct acc_msg_header replay;
@@ -54,7 +54,7 @@ void* acc_channel_connect(void*args) {
 		goto CLOSE_SOCKET;
 	}
 
-	if (replay.code == ACC_UNIX_SUCCESS && replay.type == ACC_UNIX_HELLO) {
+	if (replay.code == ACC_UNIX_SUCCESS && replay.msg_type == ACC_UNIX_HELLO) {
 		return (void*) ((intptr_t) fd);
 	}
 
@@ -69,7 +69,7 @@ void* acc_channel_connect(void*args) {
 //添加流
 error_code acc_channel_add_flows(void*handle, struct acc_flow*flows, int n_flows) {
 	struct acc_msg_header header;
-	header.type = ACC_UNIX_ADD_FLOWS;
+	header.msg_type = ACC_UNIX_ADD_FLOWS;
 	header.total_len = sizeof(struct acc_msg_header)
 			+ (sizeof(*flows) * n_flows);
 
@@ -81,7 +81,7 @@ error_code acc_channel_add_flows(void*handle, struct acc_flow*flows, int n_flows
 		return DISCONNECT;
 	}
 
-	if (replay.code == ACC_UNIX_SUCCESS && replay.type == ACC_UNIX_ADD_FLOWS) {
+	if (replay.code == ACC_UNIX_SUCCESS && replay.msg_type == ACC_UNIX_ADD_FLOWS) {
 		ACC_LOG("add flows success");
 		return FLOWS_ACCEPT;
 	} else {
@@ -95,7 +95,7 @@ error_code acc_channel_add_flows(void*handle, struct acc_flow*flows, int n_flows
 //断开连接
 void acc_channel_disconnect(void*handle) {
 	struct acc_msg_header bye;
-	bye.type = ACC_UNIX_DISCONNECT;
+	bye.msg_type = ACC_UNIX_DISCONNECT;
 	bye.total_len = sizeof(bye);
 
 	struct acc_msg_header replay;
@@ -105,7 +105,7 @@ void acc_channel_disconnect(void*handle) {
 		goto CLOSE_SOCKET;
 	}
 
-	if (replay.code == ACC_UNIX_SUCCESS && replay.type == ACC_UNIX_DISCONNECT) {
+	if (replay.code == ACC_UNIX_SUCCESS && replay.msg_type == ACC_UNIX_DISCONNECT) {
 		ACC_LOG("disconnect success");
 	} else {
 
