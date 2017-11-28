@@ -20,7 +20,7 @@ void acc_unixsocket_channel_close(int fd);
 int acc_virtio_channel_open(void);
 void acc_virtio_channel_close(int fd);
 
-#define ACC_CHANNEL_USE_UNIXSOCKET 1
+#define ACC_CHANNEL_USE_UNIXSOCKET 0
 
 static inline int acc_channel_open(void) {
 #if ACC_CHANNEL_USE_UNIXSOCKET
