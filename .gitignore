@@ -7,4 +7,6 @@ be_la/be_main
 lib/libevent-2.0.22-stable.tar.gz
 lib/libevent-2.0.22-stable/
 lib/libevent.so
+test/
+vnf/cgnat-acc/cgnat_accelerate
 
