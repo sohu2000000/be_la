@@ -21,13 +21,14 @@
 *   Feng Liu 28/10/2017  Creation
 *****************************************************************/
 
+#include "bak/be_la_accproc.h"
+
 #include <sys/types.h>
 #include <stdio.h>
 
-#include "be_la_accproc.h"
+#include "bak/be_la_api.h"
+#include "bak/be_la_common.h"
 #include "be_plugin.h"
-#include "be_la_api.h"
-#include "be_la_common.h"
 #include "common/be_la_log.h"
 
 /******************************************************************************

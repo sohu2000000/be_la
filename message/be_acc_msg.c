@@ -26,11 +26,12 @@
 #include "be_acc_context.h"
 #include "be_acc_msg.h"
 #include "acc_rule_be.h"
+#include "be_acc_card.h"
 //#include "event2/event.h"
 //#include "acc_unix_server.h"
 
 
-typedef int (*message_handle_t)(struct acc_context*state, char*message, int len,
+typedef int (*message_handle_t)(struct be_acc_card_*card, char*message, int len,
 		char*out_msg, int* out_len);
 
 static message_handle_t s_msg_handle[ACC_UNIX_MAX_TYPE] = { 0, };
@@ -45,30 +46,55 @@ int acc_unix_mssage_register(int type, message_handle_t handle) {
 
 }
 
-int be_acc_message_process(struct acc_context*context, int type, char*message,
+int be_acc_message_process(struct be_acc_card_*card, int type, char*message,
 		int len, char*out_msg, int* out_len) {
-	return s_msg_handle[type](context, message, len, out_msg, out_len);
+	return s_msg_handle[type](card, message, len, out_msg, out_len);
 }
 
-int hello_message_handle(struct acc_context*state, char*message, int len,
+int hello_message_handle(struct be_acc_card_*card, char*message, int len,
 		char*out_msg, int* out_len) {
+
+	struct acc_context*context;
+
 	ACC_DEBUG("recv hello message\n");
-	if (len > sizeof(state->hostname)) {
+	if (len > sizeof(context->hostname)) {
 		return -1;
 	}
 
-	strncpy(state->hostname, message, len);
-	state->hostname[len] = '\0';
-	strcpy(state->bridge, "br0");
-	state->hostid = 0XDEAD;
-	state->be = acc_get_first_rule_be();
+	assert(!card->context);
+	assert(!card->plugin);
+
+	card->plugin = be_plugin_match(&card->card);
+	if(!card->plugin)
+	{
+		ACC_ERROR("no plugin match");
+		return -1;
+	}
+
+	context =  acc_context_alloc();
+	if(!context)
+	{
+		ACC_ERROR("init plugin context fail!\n");
+		card->plugin = NULL;
+		return -1;
+	}
+
+	card->context = context;
+
+	static int context_host_id = 0XDEAD0000;
+
+	strncpy(context->hostname, message, len);
+	context->hostname[len] = '\0';
+	strcpy(context->bridge, "br0");
+	context->hostid = context_host_id++;
+	context->be = acc_get_rule_be_by_name("ovs-rule");
 
 	*out_len = 0;
 
 	return 0;
 }
 
-int add_flows_message_handle(struct acc_context*state, char*message, int len,
+int add_flows_message_handle(be_card_inner_t*card, char*message, int len,
 		char*out_msg, int* out_len) {
 	ACC_DEBUG("recv add-flows message\n");
 	//set flow rule
@@ -80,16 +106,25 @@ int add_flows_message_handle(struct acc_context*state, char*message, int len,
 		return -1;
 	}
 
-	ret = state->be->acc_add_rules(state, flows, n_flows);
+	struct acc_context*context = card->context;
+	assert(context);
+
+	ret = context->be->acc_add_rules(context, flows, n_flows);
 	*out_len = 0;
 	return ret;
 }
 
-int disconnect_message_handle(struct acc_context*state, char*message, int len,
+int disconnect_message_handle(be_card_inner_t*card, char*message, int len,
 		char*out_msg, int* out_len) {
 	ACC_DEBUG("recv disconnect message\n");
-	state->be->acc_flush_rules(state);
-	acc_context_destory(state);
+
+	struct acc_context*context = card->context;
+	assert(context);
+	context->be->acc_flush_rules(context);
+	acc_context_destory(context);
+
+	card->plugin = NULL;
+	card->context = NULL;
 	*out_len = 0;
 	return 0;
 }

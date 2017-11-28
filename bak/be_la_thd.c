@@ -21,19 +21,20 @@
 *   Feng Liu 28/10/2017  Creation
 *****************************************************************/
 
+#include "bak/be_la_thd.h"
+
 #include <unistd.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "be_la_main.h"
+#include "bak/be_la_accproc.h"
+#include "bak/be_la_api.h"
+#include "bak/be_la_comm.h"
+#include "bak/be_la_main.h"
 #include "be_la_log.h"
-#include "be_la_comm.h"
-#include "be_la_thd.h"
-#include "be_la_api.h"
 #include "be_la_cmd.h"
-#include "be_la_accproc.h"
 
 extern BE_LA_COMM_HANDLE g_handler;
 
@@ -107,7 +108,7 @@ void * vm_channel_thread(void * data){
                 } 
 
                 /* 2. process messsage */               
-                be_la_acc_process(channel_vendor, channel_model, &inbuf, in_len, &outbuf, &out_len);
+                be_la_acc_process(g_handler.aux,channel_vendor, channel_model, &inbuf, in_len, &outbuf, &out_len);
 
                 /* 3. write feedback result to VM */
                 BE_LA_LOG("Please write the feedback message out_len = %d \n", out_len);                   

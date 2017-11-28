@@ -21,7 +21,7 @@ struct acc_context {
 	//struct event*write_event;
 };
 
-int acc_context_init();
+struct acc_context* acc_context_alloc();
 void acc_context_destory(struct acc_context*context);
 
 #endif /* MESSAGE_BE_CONTEXT_H_ */

@@ -105,7 +105,7 @@ int cgnat_accelerate(void*id, uint32_t src_ip, uint16_t src_port,
 	return ret == FLOWS_ACCEPT;
 }
 
-#if 0
+#if 1
 int main(int argc,char**argv)
 {
 	uint8_t mac1[6]="abcdef",mac2[6]="12345";

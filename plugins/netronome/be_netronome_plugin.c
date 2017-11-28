@@ -17,18 +17,23 @@
 #include "be_plugin.h"
 #include "be_acc_msg.h"
 
-int acc_netronome_proccess(void * inbuf, uint32_t in_len, void * outbuf,
+int acc_netronome_proccess(struct be_acc_card_ *card,void * inbuf, uint32_t in_len, void * outbuf,
 		int32_t * out_len) {
 
 
 	struct acc_msg_header* header = (struct acc_msg_header*)inbuf;
 	assert(header->total_len == in_len);
-	return be_acc_message_process(NULL, header->type, header->data,
+	return be_acc_message_process(card, header->msg_type, header->data,
 			header->total_len - sizeof(*header),outbuf, out_len);
 }
 
-static acc_plugin_t s_netronome_plugin = { .pfunc = acc_netronome_proccess,
-		.name = "netronome plugin", .vendor = VENDOR_NETRONOME, .model =
-				AGILIO_ISA_4000, };
+static acc_plugin_t s_netronome_plugin =
+{
+		.pfunc = acc_netronome_proccess,
+		.name = "netronome plugin",
+		.vendor = VENDOR_NETRONOME,
+		.model =
+				AGILIO_ISA_4000,
+};
 
 module_init(10, be_plugin_register, &s_netronome_plugin);

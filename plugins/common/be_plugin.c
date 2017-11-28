@@ -1,9 +1,10 @@
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "be_plugin.h"
-
-#include "../../common/be_la_log.h"
+#include "be_la_log.h"
+#include "be_acc_card.h"
 
 acc_plugin_t g_acc_plugins[VENDOR_MAX][MODEL_MAX];
 
@@ -46,13 +47,67 @@ int be_plugin_is_registed(enum tag_vendor vendor, enum tag_model model) {
 	return 0;
 }
 
-int be_plugin_callback(enum tag_vendor vendor, enum tag_model model, void*inbuf,
-		uint32_t in_len, void*outbuf, int32_t*out_len) {
+#if 0
+int be_plugin_callback(be_card_inner_t*card, void*inbuf, uint32_t in_len,
+		void*outbuf, int32_t*out_len) {
 	int ret;
-	acc_plugin_t* plugin = &g_acc_plugins[vendor][model];
+
+	assert(card);
+	acc_plugin_t* plugin = &g_acc_plugins[card->card.vendor][card->card.model];
 
 	BE_LA_DEBUG("plugin %s process message", plugin->name);
-	ret = plugin->pfunc(inbuf, in_len, outbuf, out_len);
+	ret = plugin->pfunc(card, inbuf, in_len, outbuf, out_len);
+	BE_LA_DEBUG("plugin %s process message end", plugin->name);
+	return ret;
+}
+#endif
+
+acc_plugin_t* be_plugin_match(acc_card_t*card) {
+	assert(card);
+	acc_plugin_t* plugin = &g_acc_plugins[card->vendor][card->model];
+	if (plugin && ((plugin->acc_type & card->acc_type) == card->acc_type)) {
+		return plugin;
+	}
+
+	return NULL;
+}
+
+void* be_plugin_context_init(be_card_inner_t*card, acc_plugin_t*plugin) {
+	assert(plugin);
+	assert(card);
+
+	return plugin->context_init(card);
+}
+
+int be_plugin_context_destory(be_card_inner_t*card, acc_plugin_t*plugin) {
+	assert(plugin);
+	assert(card);
+	return plugin->context_destory(card);
+}
+
+int be_plugin_init(acc_plugin_t* plugin) {
+	assert(plugin);
+	return plugin->init();
+}
+
+int be_plugin_destory(acc_plugin_t* plugin) {
+	return -1;
+}
+
+int be_plugin_process(be_card_inner_t*card, acc_plugin_t* plugin, void*inbuf,
+		uint32_t in_len, void*outbuf, int32_t*out_len) {
+
+	assert(card);
+	assert(plugin);
+	assert(inbuf);
+	assert(outbuf);
+	assert(out_len);
+
+	//acc_plugin_t* plugin = &g_acc_plugins[card->card.vendor][card->card.model];
+
+	int ret;
+	BE_LA_DEBUG("plugin %s process message", plugin->name);
+	ret = plugin->pfunc(card, inbuf, in_len, outbuf, out_len);
 	BE_LA_DEBUG("plugin %s process message end", plugin->name);
 	return ret;
 }

@@ -22,12 +22,12 @@
 *****************************************************************/
 
 
+#include <bak/be_la_comm.h>
+#include <bak/be_la_thd.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "be_la_comm.h"
 #include "be_la_cmd.h"
-#include "be_la_thd.h"
 #include "be_la_vendor.h"
 #include "common/be_la_log.h"
 

@@ -9,16 +9,23 @@
 #define SRC_COMMON_ACC_UNIX_COMMON_H_
 
 #include <inttypes.h>
+#include <assert.h>
+#include <errno.h>
+#include <poll.h>
+#include <string.h>
 
 #include "be_acc_context.h"
+#include "be_la_vendor.h"
+struct be_acc_card_;
 
 struct acc_msg_header {
 	int total_len;
+	enum tag_acc_type acc_type;
 #define ACC_UNIX_HELLO      1
 #define ACC_UNIX_ADD_FLOWS  2
 #define ACC_UNIX_DISCONNECT 3
 #define ACC_UNIX_MAX_TYPE   10
-	int type;
+	int msg_type;
 #define ACC_UNIX_SUCCESS 0
 #define ACC_UNIX_FAIL    1
 	int code;
@@ -178,6 +185,6 @@ static inline int acc_unix_send_recv(void*handle,
 	return 0;
 }
 
-int be_acc_message_process(struct acc_context*state, int type, char*message,
+int be_acc_message_process(struct be_acc_card_ *state, int type, char*message,
 		int len, char*out_msg, int* out_len);
 #endif /* SRC_COMMON_ACC_UNIX_COMMON_H_ */

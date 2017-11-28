@@ -30,7 +30,8 @@ typedef struct tag_BE_LA_COMM_HANDLE BE_LA_COMM_HANDLE;
 struct tag_BE_LA_COMM_HANDLE
 {
     int cmd_fd;
-    int vseria_fd;    
+    int vseria_fd;
+    void** aux;
 };
 
 #endif
