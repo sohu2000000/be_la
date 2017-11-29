@@ -21,6 +21,7 @@ typedef struct be_acc_card_{
 }be_card_inner_t;
 
 int be_la_acc_cards_init(void);
+acc_card_t* be_la_get_acc_cardptr(char*vm_uuid);
 int be_acc_card_reg(acc_card_t * reginfo);
 int be_acc_card_unreg(acc_card_t* unreginfo);
 void be_acc_cards_dump(void);

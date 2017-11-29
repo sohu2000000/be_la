@@ -135,9 +135,9 @@ int unix_socket_clnt_init(char * socket_path){
 }
 
 int vm_channel_open(acc_card_t* card, void* arg) {
-	be_card_inner_t* be_card = (be_card_inner_t*) card;
+	be_card_inner_t* be_card = (be_card_inner_t*)be_la_get_acc_cardptr(card->vmpath);
 	int fd = unix_socket_clnt_init(card->vmpath);
-	if (be_card->fd < 0) {
+	if (fd < 0) {
 		return -1;
 	}
 	assert(be_card->context== NULL);

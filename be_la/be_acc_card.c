@@ -29,12 +29,23 @@ int be_la_get_acc_card(char*vm_uuid) {
 
 	int i = 0;
 	for (i = 0; i < ACC_CARD_MAX_NUM; ++i) {
-		if (strcmp(g_acc_cards.acc_cards[i]->vm_uuid, vm_uuid) == 0) {
+		if (g_acc_cards.acc_cards[i] && strcmp(g_acc_cards.acc_cards[i]->vm_uuid, vm_uuid) == 0) {
 			return i;
 		}
 	}
 
 	return -1;
+}
+
+acc_card_t* be_la_get_acc_cardptr(char*vm_uuid)
+{
+	int idx;
+	idx = be_la_get_acc_card(vm_uuid);
+	if(idx >=0)
+	{
+		return g_acc_cards.acc_cards[idx];
+	}
+	return NULL;
 }
 
 int be_acc_card_reg(acc_card_t* reginfo) {
@@ -45,7 +56,7 @@ int be_acc_card_reg(acc_card_t* reginfo) {
 	assert(reginfo->vm_uuid[0]);
 	assert(reginfo->vmpath[0]);
 
-	if (be_la_get_acc_card(reginfo->vmpath)) {
+	if (be_la_get_acc_card(reginfo->vmpath) >= 0) {
 		BE_LA_ERROR("acc card is exists");
 		return -1;
 	}
@@ -58,7 +69,7 @@ int be_acc_card_reg(acc_card_t* reginfo) {
 				return -1;
 			}
 
-			memcpy(card, reginfo, sizeof(*card));
+			memcpy(card, reginfo, sizeof(*reginfo));
 			g_acc_cards.acc_cards[i] = card;
 			g_acc_cards.reg_num++;
 			return 0;

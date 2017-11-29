@@ -72,7 +72,7 @@ static void usage(void){
 ******************************************************************************/
 int main(int argc, char** argv) {
     int c;
-    int retval = 0, total = 0;
+    int retval = 0;
     char * data = NULL;
     cmd_hdr_t * cmd = NULL;
 
@@ -92,16 +92,16 @@ int main(int argc, char** argv) {
 
 
 
-    total = 1024;
-    data = (void *)malloc(total);
-    if(NULL == data){
+    //total = 1024;
+    //data = (void *)malloc(total);
+	cmd = (cmd_hdr_t * )malloc(sizeof(*cmd));
+    if(NULL == cmd){
         perror("malloc failed: ");
         retval = -1;
         goto out;
     }
-    memset(data, 0x0, total);
+    memset(cmd, 0x0, sizeof(*cmd));
         
-    cmd = (cmd_hdr_t * )data;
     while(-1 != (c = getopt_long(argc, argv, optstring, longopts, NULL))){        
         switch(c){
         case 'v':
@@ -182,7 +182,7 @@ int main(int argc, char** argv) {
         goto out1;
     }
     
-    write(g_handler.cmdsrv_fd, data, total);
+    write(g_handler.cmdsrv_fd, cmd, sizeof(*cmd));
     goto out2;
 
 out3:
