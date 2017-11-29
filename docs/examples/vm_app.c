@@ -28,7 +28,7 @@ typedef struct tag_acc_proc_msg{
 
 int main(){
 	/*1. */
-	int fd = open("/dev/virtio-ports/pv-mon", O_RDWR);
+	int fd = open("/dev/virtio-ports/accla", O_RDWR);
 	int ret = -1;
 	char write_buf[256] = {"Hello World, I am VM !!!"}, feedback[256] = {'\0'};
 	acc_proc_msg_t msg;

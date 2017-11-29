@@ -18,7 +18,7 @@
 
 #include "be_la_log.h"
 
-#define CHANNEL_PATH "/dev/virtio-ports/pv-mon"
+#define CHANNEL_PATH "/dev/virtio-ports/accla"
 
 int acc_virtio_channel_open(void) {
 	int fd = open(CHANNEL_PATH, O_RDWR);
