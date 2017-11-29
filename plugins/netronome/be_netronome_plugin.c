@@ -34,6 +34,7 @@ static acc_plugin_t s_netronome_plugin =
 		.vendor = VENDOR_NETRONOME,
 		.model =
 				AGILIO_ISA_4000,
+		.acc_type = ACC_TYPE_FLOW | ACC_TYPE_COMPRESS,
 };
 
 module_init(10, be_plugin_register, &s_netronome_plugin);
