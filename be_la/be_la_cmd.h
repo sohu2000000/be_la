@@ -19,7 +19,7 @@ typedef struct {
 	enum tag_model model;
     enum tag_acc_type acc_type;
     char vm_uuid[VMUUID_MAX_LEN];
-    char vmpath[VMPATH_MAX_LEN];
+    char vmpath[VMPATH_MAX_LEN];  /*Unique index*/
 }acc_card_t;
 
 typedef struct tag_cmd_hdr{

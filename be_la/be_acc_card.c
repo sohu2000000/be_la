@@ -24,12 +24,12 @@ struct acc_cards_table {
 struct acc_cards_table g_acc_cards;
 
 
-int be_la_get_acc_card(char*vm_uuid) {
-	assert(vm_uuid);
+int be_la_get_acc_card(char*vmpath) {
+	assert(vmpath);
 
 	int i = 0;
 	for (i = 0; i < ACC_CARD_MAX_NUM; ++i) {
-		if (g_acc_cards.acc_cards[i] && strcmp(g_acc_cards.acc_cards[i]->vm_uuid, vm_uuid) == 0) {
+		if (g_acc_cards.acc_cards[i] && strcmp(g_acc_cards.acc_cards[i]->vmpath, vmpath) == 0) {
 			return i;
 		}
 	}
@@ -37,10 +37,10 @@ int be_la_get_acc_card(char*vm_uuid) {
 	return -1;
 }
 
-acc_card_t* be_la_get_acc_cardptr(char*vm_uuid)
+acc_card_t* be_la_get_acc_cardptr(char* vmpath)
 {
 	int idx;
-	idx = be_la_get_acc_card(vm_uuid);
+	idx = be_la_get_acc_card(vmpath);
 	if(idx >=0)
 	{
 		return g_acc_cards.acc_cards[idx];

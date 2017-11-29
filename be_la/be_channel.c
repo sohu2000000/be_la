@@ -140,7 +140,7 @@ int vm_channel_open(acc_card_t* card, void* arg) {
 	if (fd < 0) {
 		return -1;
 	}
-	assert(be_card->context== NULL);
+	assert(be_card->context == NULL);
 
 	struct event_base *base = arg;
 
