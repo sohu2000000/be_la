@@ -72,8 +72,7 @@ static void usage(void){
 ******************************************************************************/
 int main(int argc, char** argv) {
     int c;
-    int read_size = -1, num = -1, maxfd  = -1, retval = 0, total = 0;
-    char buffer[1024] = {"This is a commond\n"}, *path = NULL, *param;
+    int retval = 0, total = 0;
     char * data = NULL;
     cmd_hdr_t * cmd = NULL;
 
@@ -109,28 +108,28 @@ int main(int argc, char** argv) {
             if(0 == strcmp(optarg,"netronome")){
                 printf("c = %c\n",c);
                 printf("optarg = %s\n", optarg);
-                cmd->vendor = VENDOR_NETRONOME;
+                cmd->card.vendor = VENDOR_NETRONOME;
             }
             break;
         case 'm':
             if(0 == strcmp(optarg,"agilio_isa_4000")){
                 printf("c = %c\n",c);
                 printf("optarg = %s\n", optarg);
-                cmd->model = AGILIO_ISA_4000;
+                cmd->card.model = AGILIO_ISA_4000;
             }            
             break;
         case 'c':
             if(optarg[0] != '\0'){
                 printf("c = %c\n",c);
                 printf("optarg = %s\n", optarg);            
-                strcpy(cmd->vmpath, optarg);
+                strcpy(cmd->card.vmpath, optarg);
             }
             break;
         case 'u':
             if(optarg[0] != '\0'){
                 printf("c = %c\n",c);
                 printf("optarg = %s\n", optarg);            
-                strcpy(cmd->vm_uuid, optarg);
+                strcpy(cmd->card.vm_uuid, optarg);
             }
             break;
         case 'r':
@@ -147,12 +146,12 @@ int main(int argc, char** argv) {
             if(0 == strcmp(optarg,"flow")){
                 printf("c = %c\n",c);
                 printf("optarg = %s\n", optarg);
-                cmd->acc_type |= 1 << ACC_TYPE_FLOW;
-                printf("cmd->acc_type = 0x%x\n", cmd->acc_type);
+                cmd->card.acc_type |= 1 << ACC_TYPE_FLOW;
+                printf("cmd->acc_type = 0x%x\n", cmd->card.acc_type);
             } else if (0 == strcmp(optarg,"compress")){
                 printf("c = %c\n",c);
                 printf("optarg = %s\n", optarg);
-                cmd->acc_type |= 1 << ACC_TYPE_COMPRESS;
+                cmd->card.acc_type |= 1 << ACC_TYPE_COMPRESS;
             } else{
                 fprintf(stderr, "unsupported acc type\n");
             }            
@@ -165,12 +164,12 @@ int main(int argc, char** argv) {
     }
 
 
-    if(0 == cmd->vendor 
+    if(0 == cmd->card.vendor 
         || 0 == cmd->cmd_type
-        || 0 == cmd->model 
-        || 0 == cmd->acc_type 
-        || '\0' == cmd->vmpath[0] 
-        || '\0' == cmd->vm_uuid[0]){
+        || 0 == cmd->card.model 
+        || 0 == cmd->card.acc_type 
+        || '\0' == cmd->card.vmpath[0] 
+        || '\0' == cmd->card.vm_uuid[0]){
         fprintf(stderr, "Bad Usage\n");
         retval = -1;
         goto out3;

@@ -25,8 +25,8 @@
 *   Feng Liu 28/10/2017  Creation
 *****************************************************************/
 
-#include "../be_la_cmd.h"
-#include "../be_la_vendor.h"
+#include "be_la_cmd.h"
+#include "be_la_vendor.h"
 
 typedef struct tag_ACCSH_HANDLE ACCSH_HANDLE;
 

@@ -30,6 +30,8 @@
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <pthread.h>
+#include <unistd.h>
+#include <stdio.h>
 
 
 /******************************************************************************
