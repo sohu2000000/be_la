@@ -57,7 +57,7 @@ static void usage(void){
     fprintf(stderr, "\t <-c, --channel>           channel path\n");    
     fprintf(stderr, "\t <-t, --type>              acc type: <flow | compress>\n");
     fprintf(stderr, "Example: \n");
-    fprintf(stderr, "\taccsh -r -v netronome -m agilio_isa_4000 -u 4dea22b3-1d52-d8f3-2516-782e98000000 -c /tmp/vserial -t flow -t compress\n");
+    fprintf(stderr, "\taccsh -r -v netronome -m agilio_isa_4000 -u 4dea22b3-1d52-d8f3-2516-782e98000000 -c /tmp/vaccla -t flow -t compress\n");
 }
 
 /******************************************************************************
