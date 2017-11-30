@@ -43,6 +43,8 @@ void* acc_channel_connect(void*args) {
 	hostname_len = strlen(hostname);
 
 	struct acc_msg_header hello;
+	hello.acc_type = ACC_TYPE_FLOW;
+	hello.code = 0;
 	hello.msg_type = ACC_UNIX_HELLO;
 	hello.total_len = sizeof(hello) + hostname_len;
 
@@ -69,6 +71,8 @@ void* acc_channel_connect(void*args) {
 //添加流
 error_code acc_channel_add_flows(void*handle, struct acc_flow*flows, int n_flows) {
 	struct acc_msg_header header;
+	header.acc_type = ACC_TYPE_FLOW;
+	header.code = 0;
 	header.msg_type = ACC_UNIX_ADD_FLOWS;
 	header.total_len = sizeof(struct acc_msg_header)
 			+ (sizeof(*flows) * n_flows);
@@ -96,6 +100,8 @@ error_code acc_channel_add_flows(void*handle, struct acc_flow*flows, int n_flows
 void acc_channel_disconnect(void*handle) {
 	struct acc_msg_header bye;
 	bye.msg_type = ACC_UNIX_DISCONNECT;
+	bye.acc_type = ACC_TYPE_FLOW;
+	bye.code = 0;
 	bye.total_len = sizeof(bye);
 
 	struct acc_msg_header replay;
