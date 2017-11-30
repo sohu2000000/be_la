@@ -166,6 +166,8 @@ static inline int acc_unix_send_recv(void*handle,
 		struct acc_msg_header*send_hdr, char*send_body,
 		ssize_t send_body_len, struct acc_msg_header*recv_hdr,
 		char*recv_body, ssize_t*recv_len) {
+	ACC_DEBUG("send message :acc_type:%d,code:%d,message_type:%d,total_len:%d\n",send_hdr->acc_type,send_hdr->code,
+			send_hdr->msg_type,send_hdr->total_len);
 	if (!acc_unix_send_message(handle, send_hdr, send_body, send_body_len)) {
 		//send fail
 		ACC_ERROR("send message fail!\n");
@@ -182,6 +184,8 @@ static inline int acc_unix_send_recv(void*handle,
 		return -1;
 	}
 
+	ACC_DEBUG("rcv message :acc_type:%d,code:%d,message_type:%d,total_len:%d\n",recv_hdr->acc_type,recv_hdr->code,
+			recv_hdr->msg_type,recv_hdr->total_len);
 	return 0;
 }
 
