@@ -15,5 +15,5 @@ compile-libevent2:
 	if [ ! -e ./libevent.so ]; then (cd $(LIBEVENT_DIR_NAME) ; ./configure ; make ; cp .libs/libevent.so .. ; ) ; fi;
 
 clean:
-	rm -rf $(LIBEVENT_DIR_NAME)
-	rm -rf libevent.so
+	#rm -rf $(LIBEVENT_DIR_NAME)
+	#rm -rf libevent.so
