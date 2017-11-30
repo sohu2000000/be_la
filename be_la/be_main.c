@@ -43,7 +43,7 @@ int be_cmd_srv_init() {
 
 	server_fd = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (server_fd < 0) {
-		perror("socket failed: ");
+		ACC_PERROR("socket failed: ");
 		return -1;
 	}
 
@@ -52,12 +52,12 @@ int be_cmd_srv_init() {
 
 	if (bind(server_fd, (struct sockaddr *) &server_addr,
 			sizeof(server_addr))) {
-		perror("bind: ");
+		ACC_PERROR("bind: ");
 		return -1;
 	}
 
 	if (listen(server_fd, 10)) {
-		perror("listen: ");  //server listen most 10 requests.
+		ACC_PERROR("listen: ");  //server listen most 10 requests.
 		return -1;
 	}
 
@@ -73,7 +73,7 @@ void be_cmd_request_process(evutil_socket_t fd, short events, void*arg) {
 	int ret = read(fd, buf, CMD_REQUEST_MESSAGE_MAX_SIZE);
 
 	if (ret == -1) {
-		perror("read failed: ");
+		ACC_PERROR("read failed: ");
 		close(fd);
 		return;
 	}
@@ -100,7 +100,7 @@ void be_cmd_server_process(evutil_socket_t listener, short event, void*arg) {
 	socklen_t slen = sizeof(ss);
 	int fd = accept(listener, (struct sockaddr*) &ss, &slen);
 	if (fd < 0) {
-		perror("accept: ");
+		ACC_PERROR("accept: ");
 	} else if (fd > FD_SETSIZE) {
 		BE_LA_ERROR("fd more than %d\n", FD_SETSIZE);
 		close(fd);
@@ -135,7 +135,7 @@ int main(void) {
 #if 0
 	/* become a deamon, no change dir and not redirect io */
 	if(daemon(1,1) < 0) {
-		perror("deamon failed: ");
+		ACC_PERROR("deamon failed: ");
 		return 1;
 	}
 #endif

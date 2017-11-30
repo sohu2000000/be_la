@@ -1,6 +1,9 @@
 #ifndef BE_LA_LOG_H
 #define BE_LA_LOG_H
 
+#include <errno.h>
+#include <string.h>
+
 enum log_level {
 	BE_LA_LEVEL_DEBUG, 
     BE_LA_LEVEL_INFO, 
@@ -31,4 +34,7 @@ void be_la_log_print(int fd,const char*fmt,...);
 #define ACC_DEBUG BE_LA_DEBUG
 #define ACC_LOG   BE_LA_LOG
 #define ACC_ERROR BE_LA_ERROR
+
+#define ACC_PERROR(message)\
+	BE_LA_LOG_COMMON(BE_LA_LEVEL_ERROR,"%s:%s\n",message,strerror(errno))
 #endif

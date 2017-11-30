@@ -23,13 +23,13 @@ int be_vm_channel_init(char * socket_path) {
 
 	/*UNIX SOCKET*/
 	if (access(socket_path, W_OK) < 0) {
-		perror("access failed: ");
+		ACC_PERROR("access failed: ");
 		return -1;
 	}
 
 	sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (-1 == sockfd) {
-		perror("socket failed: ");
+		ACC_PERROR("socket failed: ");
 		return -1;
 	}
 
@@ -40,7 +40,7 @@ int be_vm_channel_init(char * socket_path) {
 
 	ret = connect(sockfd, (struct sockaddr *) &address, sizeof(address));
 	if (ret == -1) {
-		perror("connect failed: ");
+		ACC_PERROR("connect failed: ");
 		return -1;
 	}
 
@@ -108,14 +108,14 @@ int unix_socket_clnt_init(char * socket_path){
     /*UNIX SOCKET*/
     if(access(socket_path, W_OK) < 0)
     {
-        perror("access failed: ");
+    	ACC_PERROR("access failed: ");
         return -1;
     }
 
     sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
     if (-1 == sockfd)
     {
-        perror("socket failed: ");
+    	ACC_PERROR("socket failed: ");
         return -1;
     }
 
@@ -125,7 +125,7 @@ int unix_socket_clnt_init(char * socket_path){
 
     ret = connect(sockfd, (struct sockaddr *)&address, sizeof(address));
     if(ret == -1){
-        perror("connect failed: ");
+    	ACC_PERROR("connect failed: ");
         return -1;
     }
 
