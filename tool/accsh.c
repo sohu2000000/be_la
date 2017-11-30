@@ -29,10 +29,10 @@
 
 #include "accsh_comm.h"
 #include "accsh.h"
+#include "be_la_path.h"
 
-
-#define CMD_UNIX_PATH       "/tmp/be_la_cmd"
-#define VSERIAL_UNIX_PATH   "/tmp/vserial"
+//#define CMD_UNIX_PATH       "/tmp/be_la_cmd"
+//#define VSERIAL_UNIX_PATH   "/tmp/vserial"
 
 
 ACCSH_HANDLE g_handler;
