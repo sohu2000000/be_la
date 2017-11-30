@@ -146,12 +146,12 @@ int main(int argc, char** argv) {
             if(0 == strcmp(optarg,"flow")){
                 printf("c = %c\n",c);
                 printf("optarg = %s\n", optarg);
-                cmd->card.acc_type |= 1 << ACC_TYPE_FLOW;
+                cmd->card.acc_type |= ACC_TYPE_FLOW;
                 printf("cmd->acc_type = 0x%x\n", cmd->card.acc_type);
             } else if (0 == strcmp(optarg,"compress")){
                 printf("c = %c\n",c);
                 printf("optarg = %s\n", optarg);
-                cmd->card.acc_type |= 1 << ACC_TYPE_COMPRESS;
+                cmd->card.acc_type |= ACC_TYPE_COMPRESS;
             } else{
                 fprintf(stderr, "unsupported acc type\n");
             }            
