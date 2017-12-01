@@ -31,6 +31,7 @@
 #include "be_la_log.h"
 #include "be_acc_card.h"
 #include "event2/event.h"
+#include "event2/event_struct.h"
 #include "be_plugin.h"
 
 int be_cmd_srv_init() {
@@ -72,25 +73,34 @@ void be_cmd_request_process(evutil_socket_t fd, short events, void*arg) {
 
 	int ret = read(fd, buf, CMD_REQUEST_MESSAGE_MAX_SIZE);
 
+	struct event*myself = (struct event*)arg;
 	if (ret == -1) {
 		ACC_PERROR("read failed: ");
 		close(fd);
+		//need delete event from base
+		event_del(myself);
 		return;
 	}
 
 	if (ret == 0) {
 		close(fd);
+		//need delete event from base
+		event_del(myself);
 		return;
 	}
 
 	if (ret != sizeof(cmd_hdr_t)) {
 		BE_LA_ERROR("command message length error\n");
 		close(fd);
+		//need delete event from base
+		event_del(myself);
 		return;
 	}
 
-	be_la_cmd_process((cmd_hdr_t *) buf,arg);
+	be_la_cmd_process((cmd_hdr_t *) buf,myself->ev_base);
 	close(fd);
+	//need delete event from base
+	event_del(myself);
 	return;
 }
 
@@ -122,6 +132,7 @@ void be_cmd_server_process(evutil_socket_t listener, short event, void*arg) {
 			close(fd);
 		}
 
+		read_event->ev_arg = read_event;//arg is myself
 		event_add(read_event, NULL);
 	}
 }

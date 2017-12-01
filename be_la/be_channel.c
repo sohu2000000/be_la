@@ -59,11 +59,13 @@ void do_vm_request_read(evutil_socket_t fd, short events, void*arg) {
 	int out_n_size = 0;
 
 	card = (be_card_inner_t*) arg;
-	//state = (struct acc_context*) arg;
+	struct event*myself = card->read_event;
 
 	if (acc_unix_recv_message((void*) ((intptr_t) fd), &hdr, buf, &n_size)) {
 		ACC_ERROR("recv message fail!\n");
-		//XXX
+		close(fd);
+		event_del(myself);
+		//XXX is need reopen ?
 		//free_fd_state(state);
 		return;
 	}
@@ -76,20 +78,11 @@ void do_vm_request_read(evutil_socket_t fd, short events, void*arg) {
 	reply_hdr.msg_type = hdr.msg_type;
 	reply_hdr.code = ACC_UNIX_SUCCESS;
 
-#if 1
 	if (be_acc_message_process(card, hdr.msg_type, buf, n_size, out_buf,
 			&out_n_size)) {
 		ACC_ERROR("process message fail!\n");
 		reply_hdr.code = ACC_UNIX_FAIL;
 	}
-#else
-	if(acc_netronome_proccess(state,hdr,n_size, out_buf,
-					&out_n_size))
-	{
-		ACC_ERROR("process message fail!\n");
-		reply_hdr.code = ACC_UNIX_FAIL;
-	}
-#endif
 
 	reply_hdr.total_len += out_n_size;
 	ACC_DEBUG("reply message len:%d,type:%d,code:%d\n", reply_hdr.total_len,
@@ -128,7 +121,6 @@ int unix_socket_clnt_init(char * socket_path){
     	ACC_PERROR("connect failed: ");
         return -1;
     }
-
 
     BE_LA_LOG("init_unix_socket sockfd = %d\n", sockfd);
     return sockfd;
