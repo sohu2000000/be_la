@@ -61,8 +61,13 @@ int hello_message_handle(struct be_acc_card_*card, char*message, int len,
 		return -1;
 	}
 
-	assert(!card->context);
-	assert(!card->plugin);
+	if(card->context)
+	{
+		acc_context_destory(context);
+		card->context = NULL;
+	}
+	//assert(!card->context);
+	//assert(!card->plugin);
 
 	card->plugin = be_plugin_match(&card->card);
 	if(!card->plugin)
