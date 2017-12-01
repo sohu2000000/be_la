@@ -232,7 +232,7 @@ static inline int acc_ovs_edit_rules(struct acc_context*state,
 		 mod_nw_src:10.2.2.3,mod_tp_src:9934,output:normal'
 		 */
 		ret = snprintf(buffer, sizeof(buffer),
-				"#ovs-ofctl %s %s 'cookie=0X%X priority=%d table=%d %s %s'",
+				"ovs-ofctl %s %s 'cookie=0X%X priority=%d table=%d %s %s'",
 				is_delete ? "del-flow" : "add-flow", state->bridge,
 				rules[i].cookie, rules[i].priority, rules[i].table,rules[i].match,rules[i].action);
 		if (ret < 0 || ret >= sizeof(buffer)) {
