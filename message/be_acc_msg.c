@@ -63,7 +63,7 @@ int hello_message_handle(struct be_acc_card_*card, char*message, int len,
 
 	if(card->context)
 	{
-		acc_context_destory(context);
+		acc_context_destory(card->context);
 		card->context = NULL;
 	}
 	//assert(!card->context);
