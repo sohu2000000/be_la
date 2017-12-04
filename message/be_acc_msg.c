@@ -61,11 +61,6 @@ int hello_message_handle(struct be_acc_card_*card, char*message, int len,
 		return -1;
 	}
 
-	if(card->context)
-	{
-		acc_context_destory(card->context);
-		card->context = NULL;
-	}
 	//assert(!card->context);
 	//assert(!card->plugin);
 
@@ -76,7 +71,14 @@ int hello_message_handle(struct be_acc_card_*card, char*message, int len,
 		return -1;
 	}
 
-	context =  acc_context_alloc();
+	if(card->context)
+	{
+		be_plugin_context_destory(card, card->plugin);
+		card->context = NULL;
+	}
+
+	context = be_plugin_context_init(card,card->plugin);
+	//context =  acc_context_alloc();
 	if(!context)
 	{
 		ACC_ERROR("init plugin context fail!\n");

@@ -19,16 +19,29 @@ int be_plugin_register(acc_plugin_t* plugin) {
 		return -1;
 	}
 
+	if(be_plugin_init(plugin))
+	{
+		BE_LA_ERROR("plugin %s init fail!\n",plugin->name);
+		return -1;
+	}
+
 	memcpy(&g_acc_plugins[plugin->vendor][plugin->model], plugin,
 			sizeof(*plugin));
 	BE_LA_LOG("plugin %s install success!\n",
 			g_acc_plugins[plugin->vendor][plugin->model].name);
+
 	return 0;
 }
 
 int be_plugin_unregister(acc_plugin_t* plugin) {
 	assert(plugin);
 	assert(plugin->pfunc);
+
+	if(be_plugin_destroy(plugin))
+	{
+		BE_LA_ERROR("plugin %s destroy fail!\n",plugin->name);
+		return -1;
+	}
 
 	if (be_plugin_is_registed(plugin->vendor, plugin->model)) {
 		memset(&g_acc_plugins[plugin->vendor][plugin->model], 0,
@@ -82,7 +95,7 @@ void* be_plugin_context_init(be_card_inner_t*card, acc_plugin_t*plugin) {
 int be_plugin_context_destory(be_card_inner_t*card, acc_plugin_t*plugin) {
 	assert(plugin);
 	assert(card);
-	return plugin->context_destory(card);
+	return plugin->context_destroy(card);
 }
 
 int be_plugin_init(acc_plugin_t* plugin) {
@@ -90,7 +103,7 @@ int be_plugin_init(acc_plugin_t* plugin) {
 	return plugin->init();
 }
 
-int be_plugin_destory(acc_plugin_t* plugin) {
+int be_plugin_destroy(acc_plugin_t* plugin) {
 	return -1;
 }
 

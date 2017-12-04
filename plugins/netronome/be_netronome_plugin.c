@@ -16,6 +16,7 @@
 #include "be_module.h"
 #include "be_plugin.h"
 #include "be_acc_msg.h"
+#include "be_acc_card.h"
 
 int acc_netronome_proccess(struct be_acc_card_ *card,void * inbuf, uint32_t in_len, void * outbuf,
 		int32_t * out_len) {
@@ -27,9 +28,34 @@ int acc_netronome_proccess(struct be_acc_card_ *card,void * inbuf, uint32_t in_l
 			header->total_len - sizeof(*header),outbuf, out_len);
 }
 
+int acc_netronome_driver_init(void)
+{
+	return 0;
+}
+
+int acc_netronome_driver_destroy(void)
+{
+	return 0;
+}
+
+void* acc_netronome_context_init(struct be_acc_card_*card)
+{
+	return acc_context_alloc();
+}
+
+int acc_netronome_context_destroy(struct be_acc_card_*card)
+{
+	acc_context_destory(card->context);
+	return 0;
+}
+
 static acc_plugin_t s_netronome_plugin =
 {
+		.init = acc_netronome_driver_init,
 		.pfunc = acc_netronome_proccess,
+		.destroy = acc_netronome_driver_destroy,
+		.context_init = acc_netronome_context_init,
+		.context_destroy = acc_netronome_context_destroy,
 		.name = "netronome plugin",
 		.vendor = VENDOR_NETRONOME,
 		.model =
