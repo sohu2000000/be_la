@@ -58,7 +58,7 @@ void cgnat_accelerate_make_flow(struct acc_flow*cgnat_flow, uint8_t srcmac[6],ui
 
 //set action:
 	acc_action_srcmac_set(&(cgnat_flow->action), xlate_srcmac);
-	acc_action_dstmac_set(&(cgnat_flow->action), xlate_srcmac);
+	acc_action_dstmac_set(&(cgnat_flow->action), xlate_dstmac);
 	ACC_ACTION_FIELD_UPDATE_SET(cgnat_flow->action, src_ip, xlate_src_ip);
 	ACC_ACTION_FIELD_UPDATE_SET(cgnat_flow->action, src_port, xlate_src_port);
 }
