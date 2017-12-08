@@ -15,6 +15,8 @@
 
 #define ACC_CLIENT_MAX_SIZE 32
 
+extern int acc_vsocket_unix_register();
+
 static struct acc_client s_acc_client[ACC_CLIENT_MAX_SIZE];
 
 static inline struct acc_client* _acc_client_get(int idx) {
@@ -61,6 +63,7 @@ static inline struct acc_client* acc_client_add(const void* id,
 		if (socket_type) {
 			socket = acc_get_vsocket_type_by_name(socket_type);
 		} else {
+			acc_vsocket_unix_register();
 			socket = acc_get_first_vsocket_type();
 		}
 
