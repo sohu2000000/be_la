@@ -2,7 +2,9 @@ export ACC_LIB_PATH="-L$(CURDIR)/cgnat-acc/ -lcgnatacc"
 all:submodule-update build-cgnat-acc sample-vnf-checkout build-vnf
 
 submodule-update:
-	if [ ! -d samplevnf/tools ];then  git submodule init ; git submodule update ; fi;
+	#if [ ! -d samplevnf/tools ];then  git submodule init ; git submodule update ; fi;
+	if [ ! -d samplevnf/tools ];then  git clone https://github.com/opnfv/samplevnf.git samplevnf ; fi;
+
 sample-vnf-checkout:
 	(cd samplevnf ; git checkout . ; git checkout v1.0.1 ; patch -p1 < ../samplevnf-cgnat-patch/build-cgnat-diff.patch ) 
 
