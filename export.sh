@@ -1,5 +1,6 @@
 #! /bin/bash
-tmp_dir=`pwd`/export-dir/
+export_name="export-dir"
+tmp_dir=`pwd`/$export_name/
 
 #prepare workspace
 rm -rf $tmp_dir
@@ -9,7 +10,7 @@ mkdir $tmp_dir
 git checkout-index -a -f --prefix=$tmp_dir
 
 #create tar
-tar -zcvf export.vnf-only.tar.gz $tmp_dir
+tar -zcvf export.vnf-only.tar.gz $export_name
 
 #clean up
 rm -rf $tmp_dir
