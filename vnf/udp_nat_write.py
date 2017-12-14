@@ -18,7 +18,7 @@ import threading
 output_mutex = threading.Lock() 
 def sync_output(msg):
     output_mutex.acquire()
-    print data
+    print msg
     output_mutex.release()
     
 def client_recv(fd):
@@ -32,7 +32,7 @@ def client_run(fd,dst_ip,dst_port,msg=None):
     address = (str(dst_ip), int(dst_port))  
     #s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  
     
-    thread.start_new_thread( client_recv, (fd) )
+    thread.start_new_thread( client_recv, (fd,) )
     while True:  
         message= "seq:%s message:%s" % (seq, msg if msg else "client->server message")
         fd.sendto(message, address)
