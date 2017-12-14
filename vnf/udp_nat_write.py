@@ -3,17 +3,41 @@ import random
 import os
 import sys
 import time
+import thread
+import threading
+
+#def client_send(seq,fd,target):
+#    while True:  
+#        message= "seq:%s message:%s" % (seq, msg if msg else "client->server message")
+#        fd.sendto(message, address)
+#        print "send:", message, "to", address 
+#        seq=seq + 1
+#        time.sleep(0.5)
+#    fd.close() 
+
+output_mutex = threading.Lock() 
+def sync_output(msg):
+    output_mutex.acquire()
+    print data
+    output_mutex.release()
+    
+def client_recv(fd):
+    while True:
+        data, addr = fd.recvfrom(2048)  
+        if data:  
+            sync_output(data)
 
 def client_run(fd,dst_ip,dst_port,msg=None):
     seq = random.randint(0,1000)
     address = (str(dst_ip), int(dst_port))  
     #s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  
     
+    thread.start_new_thread( client_recv, (fd) )
     while True:  
         message= "seq:%s message:%s" % (seq, msg if msg else "client->server message")
         fd.sendto(message, address)
-        print "send:", message, "to", address 
-	seq=seq + 1
+        sync_output("send:%s to %s" % ( message, address)) 
+        seq=seq + 1
         time.sleep(0.5)
     fd.close() 
 
@@ -30,7 +54,8 @@ def server_run(fd):
         if not data:  
             print "client has exist"  
             break  
-        print "received:", data, "from", addr  
+        sync_output("received:%s from %s" % (data, addr))  
+        fd.sendto('recv %s ok.\n' % data,addr)
   
     fd.close()   
 
