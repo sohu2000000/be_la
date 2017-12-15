@@ -62,14 +62,19 @@ def server_run(fd):
 
 
 def start(mode):
+    client_addr='192.168.49.2'
+    client_port='1025'
+
+    server_addr='172.16.49.202'
+    server_port='1025'
     if mode == "client":
 	print "run clinet"
-	fd = create_socket('1025','192.168.50.2')
+	fd = create_socket(client_port,client_addr)
 	#write to 192.168.50.2:1025->172.16.50.202:1025
-	client_run(fd,'172.16.50.202','1025')
+	client_run(fd,server_addr,server_port)
     elif mode == "server":
 	print "run server"
-	fd = create_socket('1025','172.16.50.202')
+	fd = create_socket(server_port,server_addr)
 	server_run(fd)
     else:
 	print "error parameter"
