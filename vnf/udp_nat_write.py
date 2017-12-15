@@ -62,10 +62,10 @@ def server_run(fd):
 
 
 def start(mode):
-    client_addr='192.168.49.2'
+    client_addr='192.168.50.2'
     client_port='1025'
 
-    server_addr='172.16.49.202'
+    server_addr='172.16.50.202'
     server_port='1025'
     if mode == "client":
 	print "run clinet"
