@@ -100,7 +100,7 @@ index 239d34f..802e74e 100644
  };
  
 diff --git a/VNFs/vCGNAPT/pipeline/pipeline_cgnapt_be.c b/VNFs/vCGNAPT/pipeline/pipeline_cgnapt_be.c
-index 2da8b5e..b20daf2 100644
+index 2da8b5e..5a899dd 100644
 --- a/VNFs/vCGNAPT/pipeline/pipeline_cgnapt_be.c
 +++ b/VNFs/vCGNAPT/pipeline/pipeline_cgnapt_be.c
 @@ -3692,6 +3692,11 @@ pkt_work_cgnapt_key_ipv4_pub(
@@ -108,14 +108,26 @@ index 2da8b5e..b20daf2 100644
  }
  
 +extern int cgnat_flow_acc_enable;
-+int cgnat_accelerate(void*id, uint32_t src_ip,
++int cgnat_accelerate(void*id, uint8_t srcmac[6],uint8_t dstmac[6], uint32_t src_ip,
 +		uint16_t src_port, uint8_t protocol, uint32_t xlate_src_ip,
 +		uint16_t xlate_src_port, uint8_t xlate_srcmac[6],
 +		uint8_t xlate_dstmac[6]);
  
  /**
   * NAPT function for IPv4 private traffic which handles 1 pkt
-@@ -3942,6 +3947,13 @@ pkt_work_cgnapt_ipv4_prv(
+@@ -3879,6 +3884,11 @@ pkt_work_cgnapt_ipv4_prv(
+ 				*outport_id);
+ 	#endif
+ 
++	uint8_t srcmac[6];
++        uint8_t dstmac[6];
++        memcpy(dstmac,eth_dest,sizeof(dstmac));
++        memcpy(srcmac,eth_src,sizeof(srcmac));
++
+ 	if (local_dest_mac_present(dest_if)) {
+ 		memcpy(eth_dest,
+ 				get_local_link_hw_addr(dest_if),
+@@ -3942,6 +3952,13 @@ pkt_work_cgnapt_ipv4_prv(
  		memcpy(eth_src, get_link_hw_addr(dest_if),
  				sizeof(struct ether_addr));
  	}
@@ -123,21 +135,34 @@ index 2da8b5e..b20daf2 100644
 +	if(cgnat_flow_acc_enable)
 +	{
 +		//XXX cgnat flow acc
-+		cgnat_accelerate(&p_nat->p,*src_addr,*src_port,
-+				protocol,rte_bswap32(entry->data.pub_ip),rte_bswap16(entry->data.pub_port),eth_src,eth_dest);
++                cgnat_accelerate(&p_nat->p,srcmac,dstmac,*src_addr,rte_bswap16(*src_port),
++                              protocol,rte_bswap32(entry->data.pub_ip),entry->data.pub_port,eth_src,eth_dest);
 +	}
  
  	{
  		/* Egress */
-@@ -4805,6 +4817,13 @@ pkt4_work_cgnapt_ipv4_prv(
+@@ -4733,6 +4750,11 @@ pkt4_work_cgnapt_ipv4_prv(
+ 				 pkt->port, dest_if, *outport_id);
+ 		#endif
+ 		}
++		
++                uint8_t srcmac[6];
++                uint8_t dstmac[6];
++                memcpy(dstmac,eth_dest,sizeof(dstmac));
++                memcpy(srcmac,eth_src,sizeof(srcmac));
+ 
+ 		if (local_dest_mac_present(dest_if)) {
+ 			memcpy(eth_dest,
+@@ -4805,6 +4827,14 @@ pkt4_work_cgnapt_ipv4_prv(
  					 sizeof(struct ether_addr));
  		}
  
 +		if(cgnat_flow_acc_enable)
 +		{
 +			//XXX add cgnat flow
-+			cgnat_accelerate(&p_nat->p,*src_addr,*src_port,
-+					protocol,rte_bswap32(entry->data.pub_ip),rte_bswap16(entry->data.pub_port),eth_src,eth_dest);
++			cgnat_accelerate(&p_nat->p,srcmac,dstmac,*src_addr,rte_bswap16(*src_port),
++                                        protocol,rte_bswap32(entry->data.pub_ip),entry->data.pub_port,eth_src,eth_dest);
++
 +		}
 +
  		{
@@ -157,7 +182,7 @@ index 967596d..5f4666f 100644
  	uint8_t *ihdr = (uint8_t *)i_hdr;
  	int8_t hdr_chk = *ihdr;
 diff --git a/common/VIL/l2l3_stack/lib_arp.c b/common/VIL/l2l3_stack/lib_arp.c
-index 0162f82..e34f4dc 100644
+index 0162f82..e43afff 100644
 --- a/common/VIL/l2l3_stack/lib_arp.c
 +++ b/common/VIL/l2l3_stack/lib_arp.c
 @@ -1485,6 +1485,7 @@ void request_arp(uint8_t port_id, uint32_t ip)
@@ -168,7 +193,20 @@ index 0162f82..e34f4dc 100644
  
  	if (arp_pkt == NULL) {
  		if (ARPICMP_DEBUG)
-@@ -1694,9 +1695,10 @@ void process_arpicmp_pkt(struct rte_mbuf *pkt, l2_phy_interface_t *port)
+@@ -1671,6 +1672,12 @@ void process_arpicmp_pkt(struct rte_mbuf *pkt, l2_phy_interface_t *port)
+ 	uint32_t ip_addr;
+ 
+ 	uint32_t req_tip;
++	if(!port)
++	{
++		RTE_LOG(INFO,LIBARP,"****BUG****:%p,portid NULL,drop\n",pkt);
++		rte_pktmbuf_free(pkt);
++		return 0;
++	}
+ 
+ 	eth_h = rte_pktmbuf_mtod(pkt, struct ether_hdr *);
+ 
+@@ -1694,9 +1701,10 @@ void process_arpicmp_pkt(struct rte_mbuf *pkt, l2_phy_interface_t *port)
  			RTE_LOG(INFO, LIBARP,
  				"Invalid protocol address length - not processing ARP req\n");
  		else {
@@ -176,21 +214,30 @@ index 0162f82..e34f4dc 100644
 +			if (!port || port->ipv4_list == NULL) {
  				RTE_LOG(INFO, LIBARP,
  					"Ports IPV4 List is NULL.. Unable to Process\n");
-+				printf( "Ports IPV4 List is NULL.. Unable to Process\n");
++				//printf( "Ports IPV4 List is NULL.. Unable to Process\n");
  				return;
  			}
  
-@@ -1710,7 +1712,7 @@ void process_arpicmp_pkt(struct rte_mbuf *pkt, l2_phy_interface_t *port)
+@@ -1710,7 +1718,16 @@ void process_arpicmp_pkt(struct rte_mbuf *pkt, l2_phy_interface_t *port)
  							DYNAMIC_ARP);
  
  				} else {
 -					RTE_LOG(INFO, LIBARP,"ARP requested IP address mismatches interface IP - discarding\n");
-+					//RTE_LOG(INFO, LIBARP,"ARP requested IP address mismatches interface IP - discarding\n");
++					RTE_LOG(INFO, LIBARP,"ARP requested (inport_id %d) IP address %d.%d.%d.%d mismatches interface IP %d.%d.%d.%d- discarding\n",
++					in_port_id,
++					((uint8_t*)&(arp_h->arp_data.arp_tip))[0],
++					((uint8_t*)&(arp_h->arp_data.arp_tip))[1],
++					((uint8_t*)&(arp_h->arp_data.arp_tip))[2],
++					((uint8_t*)&(arp_h->arp_data.arp_tip))[3],
++					((uint8_t*)&((ipv4list_t *) (port->ipv4_list))->ipaddr)[0],
++					((uint8_t*)&((ipv4list_t *) (port->ipv4_list))->ipaddr)[1],
++					((uint8_t*)&((ipv4list_t *) (port->ipv4_list))->ipaddr)[2],
++					((uint8_t*)&((ipv4list_t *) (port->ipv4_list))->ipaddr)[3]);
  				}
  			}
  			/// revise conditionals to allow processing of requests with target ip = this ip and
 diff --git a/tools/vnf_build.sh b/tools/vnf_build.sh
-index 4f6212c..695f5f9 100755
+index 4f6212c..9ae0469 100755
 --- a/tools/vnf_build.sh
 +++ b/tools/vnf_build.sh
 @@ -24,7 +24,7 @@ echo "--------------------------------------------------------------------------
