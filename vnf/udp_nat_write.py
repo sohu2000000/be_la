@@ -53,9 +53,10 @@ def server_run(fd):
         data, addr = fd.recvfrom(2048)  
         if not data:  
             print "client has exist"  
-            break  
-        sync_output("received:%s from %s" % (data, addr))  
-        fd.sendto('recv %s ok.\n' % data,addr)
+            break
+	msg = "received:%s from %s" % (data, addr)
+        sync_output(msg)  
+        fd.sendto(msg,addr)
   
     fd.close()   
 
