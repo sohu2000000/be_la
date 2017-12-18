@@ -64,12 +64,6 @@ typedef enum acc_add_flow_error_code {
 #define ACC_ACTION_FIELD_MASK_SET(action,NAME)\
 	action.u.field_update.field_mask |= ACTION_FIELD_##NAME
 
-#define ACC_ACTION_FIELD_UPDATE_SET(action,NAME,src)\
-do{\
-	action.u.field_update.NAME = (src);\
-	ACC_ACTION_FIELD_MASK_SET(action,NAME);\
-}while(0)
-
 #define ACC_ACTION_IS_FIELD_MASK_SET(action,NAME) \
 ({action.u.field_update.field_mask & ACTION_FIELD_##NAME;})
 
@@ -80,11 +74,24 @@ static inline int acc_match_is_be_set(uint8_t*mask, int32_t len) {
 			return 1;
 		}
 	}
-
 	return 0;
 }
 
 #define ACC_MATCH_IS_FIELD_MASK_SET(mask,NAME)\
 	acc_match_is_be_set((uint8_t*)&(mask.NAME),sizeof(mask.NAME))
+
+//match set
+#define acc_match_field_set(match,mask,name,src)\
+	do{\
+		memcpy(&((match)->name),&src,sizeof((match)->name));\
+		memset(&((mask)->name),0XFF,sizeof((mask)->name));\
+	}while(0)
+
+//action set
+#define acc_action_field_set(action,name,src)\
+	do{\
+		memcpy(&((action)->u.field_update.name),&src,sizeof((action)->u.field_update.name));\
+		ACC_ACTION_FIELD_MASK_SET((*action),name);\
+}while(0)
 
 #endif /* SRC_FLOW_ACC_FLOW_H_ */
