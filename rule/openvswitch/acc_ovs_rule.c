@@ -108,10 +108,10 @@ static inline int acc_ovs_build_ofctl_rule(struct acc_ofctl_rule*rule,
 		_PV(flow,name,key,func)
 
 	int ret = snprintf(rule->match, sizeof(rule->match),"%s%s %s%s ip %s%s %s%s",
-			_FARG(srcmac, "eth_src=", print_mac1),
-			_FARG(dstmac, "eth_dst=", print_mac2),
-			_FARG(src_ip, "nw_src=", print_ip1),
-			_FARG(dst_ip, "nw_dst=", print_ip2));
+			_FARG(srcmac, " eth_src=", print_mac1),
+			_FARG(dstmac, " eth_dst=", print_mac2),
+			_FARG(src_ip, " nw_src=", print_ip1),
+			_FARG(dst_ip, " nw_dst=", print_ip2));
 	if (ret < 0 || ret >= sizeof(rule->match)) {
 		ACC_ERROR("build rule fail(ethnet and ipaddr)!\n");
 		return -1;
@@ -123,12 +123,12 @@ static inline int acc_ovs_build_ofctl_rule(struct acc_ofctl_rule*rule,
 	//	snprintf(((char*)rule->match)+ret,"icmp %s %s",_FARG());
 	//	break;
 	case 6:	//tcp
-		ret = snprintf(((char*) rule->match) + use_len ,sizeof(rule->match)-use_len, "tcp %s%s %s%s",
-				_FARG(src_port, "tcp_src=",print_port1), _FARG(dst_port, "tcp_dst=",print_port2));
+		ret = snprintf(((char*) rule->match) + use_len ,sizeof(rule->match)-use_len, " tcp %s%s %s%s",
+				_FARG(src_port, " tcp_src=",print_port1), _FARG(dst_port, " tcp_dst=",print_port2));
 		break;
 	case 17:	//udp
-		ret = snprintf(((char*) rule->match) + use_len, sizeof(rule->match)-use_len,"udp %s%s %s%s",
-				_FARG(src_port, "udp_src=",print_port1), _FARG(dst_port, "udp_dst=",print_port2));
+		ret = snprintf(((char*) rule->match) + use_len, sizeof(rule->match)-use_len," udp %s%s %s%s",
+				_FARG(src_port, " udp_src=",print_port1), _FARG(dst_port, " udp_dst=",print_port2));
 		break;
 	default:
 		ACC_ERROR("no support protocol %d\n", flow->match.protocol);
@@ -147,12 +147,12 @@ static inline int acc_ovs_build_ofctl_rule(struct acc_ofctl_rule*rule,
 #define _PK(flow,name,key)      ACC_ACTION_IS_FIELD_MASK_SET(flow->action,name)? key:""
 #define _PV(flow,name,key,func) ACC_ACTION_IS_FIELD_MASK_SET(flow->action,name)? func(flow->action.u.field_update.name):""
 	//build action
-	ret = snprintf(rule->action,sizeof(rule->action), "actions=%s%s %s%s %s%s  %s%s %s%s %s%s output:normal",
-			_FARG(srcmac, "mod_dl_src:", print_mac1),
-			_FARG(dstmac, "mod_dl_dst:", print_mac2),
-			_FARG(src_ip, "mod_nw_src:", print_ip1),
-			_FARG(dst_ip, "mod_nw_dst:", print_ip2),
-			_FARG(src_port, "mod_tp_src:",print_port1), _FARG(dst_port, "mod_tp_dst:",print_port2));
+	ret = snprintf(rule->action,sizeof(rule->action), " actions=%s%s %s%s %s%s  %s%s %s%s %s%s output:normal",
+			_FARG(srcmac, " mod_dl_src:", print_mac1),
+			_FARG(dstmac, " mod_dl_dst:", print_mac2),
+			_FARG(src_ip, " mod_nw_src:", print_ip1),
+			_FARG(dst_ip, " mod_nw_dst:", print_ip2),
+			_FARG(src_port, " mod_tp_src:",print_port1), _FARG(dst_port, " mod_tp_dst:",print_port2));
 	if (ret < 0 || ret >= sizeof(rule->action)) {
 		ACC_ERROR("build rule fail(ethnet and ipaddr)!\n");
 		return -1;

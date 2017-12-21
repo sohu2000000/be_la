@@ -64,11 +64,17 @@ void do_vm_request_read(evutil_socket_t fd, short events, void*arg) {
 	if (acc_unix_recv_message((void*) ((intptr_t) fd), &hdr, buf, &n_size)) {
 		ACC_ERROR("recv message fail!\n");
 		close(fd);
-		event_del(myself);
+
+		//event_del(myself);
+		event_free(myself);
+		card->read_event = NULL;
+
 		ACC_LOG("flush acc rules!\n");
 		be_acc_flush_rules(card);
+
 		ACC_LOG("unregister acc card!\n");
 		be_acc_card_unreg((acc_card_t*)card);
+
 		be_acc_cards_dump();
 		return;
 	}
