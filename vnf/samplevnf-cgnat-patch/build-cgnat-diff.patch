@@ -108,7 +108,7 @@ index 239d34f..802e74e 100644
  };
  
 diff --git a/VNFs/vCGNAPT/pipeline/pipeline_cgnapt_be.c b/VNFs/vCGNAPT/pipeline/pipeline_cgnapt_be.c
-index 2da8b5e..90c23ed 100644
+index 2da8b5e..5e174df 100644
 --- a/VNFs/vCGNAPT/pipeline/pipeline_cgnapt_be.c
 +++ b/VNFs/vCGNAPT/pipeline/pipeline_cgnapt_be.c
 @@ -77,6 +77,8 @@
@@ -140,7 +140,7 @@ index 2da8b5e..90c23ed 100644
  	if (local_dest_mac_present(dest_if)) {
  		memcpy(eth_dest,
  				get_local_link_hw_addr(dest_if),
-@@ -3942,6 +3950,28 @@ pkt_work_cgnapt_ipv4_prv(
+@@ -3942,6 +3950,29 @@ pkt_work_cgnapt_ipv4_prv(
  		memcpy(eth_src, get_link_hw_addr(dest_if),
  				sizeof(struct ether_addr));
  	}
@@ -164,12 +164,13 @@ index 2da8b5e..90c23ed 100644
 +		acc_action_field_set(&(cgnat_flow.action),src_ip,xlate_addr);
 +		acc_action_field_set(&(cgnat_flow.action),src_port,(entry->data.pub_port));
 +
++		printf("***************Dest MAC after - %02x:%02x:%02x:%02x:%02x:%02x\n", eth_src[0], eth_src[1], eth_src[2], eth_src[3], eth_src[4], eth_src[5]);
 +                cgnat_accelerate(&p_nat->p,&cgnat_flow);
 +	}
  
  	{
  		/* Egress */
-@@ -4261,6 +4291,11 @@ pkt_work_cgnapt_ipv4_pub(
+@@ -4261,6 +4292,11 @@ pkt_work_cgnapt_ipv4_pub(
  			"\tout_port%d\n", pkt->port, dest_if, *outport_id);
  		#endif
  	}
@@ -181,7 +182,7 @@ index 2da8b5e..90c23ed 100644
  
  	if (local_dest_mac_present(dest_if)) {
  		memcpy(eth_dest,
-@@ -4332,6 +4367,28 @@ pkt_work_cgnapt_ipv4_pub(
+@@ -4332,6 +4368,29 @@ pkt_work_cgnapt_ipv4_pub(
  				 sizeof(struct ether_addr));
  	}
  
@@ -204,13 +205,14 @@ index 2da8b5e..90c23ed 100644
 +		acc_action_field_set(&(cgnat_flow.action),dst_ip,xlate_addr);
 +		acc_action_field_set(&(cgnat_flow.action),dst_port,(entry->data.prv_port));
 +
++		printf("***************Dest MAC after - %02x:%02x:%02x:%02x:%02x:%02x\n", eth_src[0], eth_src[1], eth_src[2], eth_src[3], eth_src[4], eth_src[5]);
 +                cgnat_accelerate(&p_nat->p,&cgnat_flow);
 +	}
 +
  	{
  		/* Ingress */
  
-@@ -4733,6 +4790,11 @@ pkt4_work_cgnapt_ipv4_prv(
+@@ -4733,6 +4792,11 @@ pkt4_work_cgnapt_ipv4_prv(
  				 pkt->port, dest_if, *outport_id);
  		#endif
  		}
@@ -222,7 +224,7 @@ index 2da8b5e..90c23ed 100644
  
  		if (local_dest_mac_present(dest_if)) {
  			memcpy(eth_dest,
-@@ -4805,6 +4867,29 @@ pkt4_work_cgnapt_ipv4_prv(
+@@ -4805,6 +4869,30 @@ pkt4_work_cgnapt_ipv4_prv(
  					 sizeof(struct ether_addr));
  		}
  
@@ -245,6 +247,7 @@ index 2da8b5e..90c23ed 100644
 +			acc_action_field_set(&(cgnat_flow.action),src_ip,xlate_addr);
 +			acc_action_field_set(&(cgnat_flow.action),src_port,(entry->data.pub_port));
 +
++			printf("***************Dest MAC after - %02x:%02x:%02x:%02x:%02x:%02x\n", eth_src[0], eth_src[1], eth_src[2], eth_src[3], eth_src[4], eth_src[5]);
 +			cgnat_accelerate(&p_nat->p,&cgnat_flow);
 +
 +		}
@@ -252,7 +255,7 @@ index 2da8b5e..90c23ed 100644
  		{
  			/* Egress */
  			*src_addr = rte_bswap32(entry->data.pub_ip);
-@@ -5143,6 +5228,12 @@ pkt4_work_cgnapt_ipv4_pub(
+@@ -5143,6 +5231,12 @@ pkt4_work_cgnapt_ipv4_pub(
  			#endif
  		}
  
@@ -265,7 +268,7 @@ index 2da8b5e..90c23ed 100644
  		if (local_dest_mac_present(dest_if)) {
  			memcpy(eth_dest,
  					 get_local_link_hw_addr(dest_if),
-@@ -5213,6 +5304,28 @@ pkt4_work_cgnapt_ipv4_pub(
+@@ -5213,6 +5307,29 @@ pkt4_work_cgnapt_ipv4_pub(
  					 sizeof(struct ether_addr));
  		}
  
@@ -288,6 +291,7 @@ index 2da8b5e..90c23ed 100644
 +			acc_action_field_set(&(cgnat_flow.action),dst_ip,xlate_addr);
 +			acc_action_field_set(&(cgnat_flow.action),dst_port,(entry->data.prv_port));
 +
++			printf("***************Dest MAC after - %02x:%02x:%02x:%02x:%02x:%02x\n", eth_src[0], eth_src[1], eth_src[2], eth_src[3], eth_src[4], eth_src[5]);
 +			cgnat_accelerate(&p_nat->p,&cgnat_flow);
 +		}
 +
@@ -308,37 +312,37 @@ index 967596d..5f4666f 100644
  	uint8_t *ihdr = (uint8_t *)i_hdr;
  	int8_t hdr_chk = *ihdr;
 diff --git a/common/VIL/l2l3_stack/lib_arp.c b/common/VIL/l2l3_stack/lib_arp.c
-index 0162f82..034672d 100644
+index 0162f82..326c9f2 100644
 --- a/common/VIL/l2l3_stack/lib_arp.c
 +++ b/common/VIL/l2l3_stack/lib_arp.c
-@@ -1485,6 +1485,7 @@ void request_arp(uint8_t port_id, uint32_t ip)
+@@ -1484,7 +1484,13 @@ void request_arp(uint8_t port_id, uint32_t ip)
+ 
  	l2_phy_interface_t *link;
  	link = ifm_get_port(port_id);
++	if(!link || port_id == 255)
++	{
++	   RTE_LOG(INFO,LIBARP,"****BUG****");
++	   return ;
++	}
  	struct rte_mbuf *arp_pkt = lib_arp_pkt;
 +	arp_pkt->port = port_id;
  
  	if (arp_pkt == NULL) {
  		if (ARPICMP_DEBUG)
-@@ -1671,6 +1672,18 @@ void process_arpicmp_pkt(struct rte_mbuf *pkt, l2_phy_interface_t *port)
+@@ -1671,6 +1677,12 @@ void process_arpicmp_pkt(struct rte_mbuf *pkt, l2_phy_interface_t *port)
  	uint32_t ip_addr;
  
  	uint32_t req_tip;
 +	if(!port)
 +	{
-+		RTE_LOG(INFO,LIBARP,"****BUG****:%p,portid %d NULL,drop\n",pkt,in_port_id);
-+		rte_pktmbuf_free(pkt);
-+		return 0;
-+	}
-+	if(in_port_id == 255)
-+	{
-+		RTE_LOG(INFO,LIBARP,"****BUG****:%d,in_port_id error,drop\n",in_port_id);
++		RTE_LOG(INFO,LIBARP,"****BUG****:%p,portid NULL,drop\n",pkt);
 +		rte_pktmbuf_free(pkt);
 +		return 0;
 +	}
  
  	eth_h = rte_pktmbuf_mtod(pkt, struct ether_hdr *);
  
-@@ -1694,9 +1707,10 @@ void process_arpicmp_pkt(struct rte_mbuf *pkt, l2_phy_interface_t *port)
+@@ -1694,9 +1706,10 @@ void process_arpicmp_pkt(struct rte_mbuf *pkt, l2_phy_interface_t *port)
  			RTE_LOG(INFO, LIBARP,
  				"Invalid protocol address length - not processing ARP req\n");
  		else {
@@ -350,7 +354,7 @@ index 0162f82..034672d 100644
  				return;
  			}
  
-@@ -1710,7 +1724,16 @@ void process_arpicmp_pkt(struct rte_mbuf *pkt, l2_phy_interface_t *port)
+@@ -1710,7 +1723,16 @@ void process_arpicmp_pkt(struct rte_mbuf *pkt, l2_phy_interface_t *port)
  							DYNAMIC_ARP);
  
  				} else {
