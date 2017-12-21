@@ -121,10 +121,9 @@ int add_flows_message_handle(be_card_inner_t*card, char*message, int len,
 	return ret;
 }
 
-int disconnect_message_handle(be_card_inner_t*card, char*message, int len,
-		char*out_msg, int* out_len) {
-	ACC_DEBUG("recv disconnect message\n");
-
+void be_acc_flush_rules(be_card_inner_t*card)
+{
+	assert(card);
 	struct acc_context*context = card->context;
 	assert(context);
 	context->be->acc_flush_rules(context);
@@ -132,7 +131,16 @@ int disconnect_message_handle(be_card_inner_t*card, char*message, int len,
 
 	card->plugin = NULL;
 	card->context = NULL;
+}
+
+int disconnect_message_handle(be_card_inner_t*card, char*message, int len,
+		char*out_msg, int* out_len) {
+
+	ACC_DEBUG("recv disconnect message\n");
+
+	be_acc_flush_rules(card);
 	*out_len = 0;
+
 	return 0;
 }
 

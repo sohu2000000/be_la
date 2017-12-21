@@ -191,4 +191,6 @@ static inline int acc_unix_send_recv(void*handle,
 
 int be_acc_message_process(struct be_acc_card_ *state, int type, char*message,
 		int len, char*out_msg, int* out_len);
+
+void be_acc_flush_rules(be_card_inner_t*card);
 #endif /* SRC_COMMON_ACC_UNIX_COMMON_H_ */

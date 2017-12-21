@@ -65,8 +65,11 @@ void do_vm_request_read(evutil_socket_t fd, short events, void*arg) {
 		ACC_ERROR("recv message fail!\n");
 		close(fd);
 		event_del(myself);
-		//XXX is need reopen ?
-		//free_fd_state(state);
+		ACC_LOG("flush acc rules!\n");
+		be_acc_flush_rules(card);
+		ACC_LOG("unregister acc card!\n");
+		be_acc_card_unreg((acc_card_t*)card);
+		be_acc_cards_dump();
 		return;
 	}
 

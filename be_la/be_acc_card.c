@@ -81,8 +81,30 @@ int be_acc_card_reg(acc_card_t* reginfo) {
 
 int be_acc_card_unreg(acc_card_t* unreginfo)
 {
-	//TODO
-	*(int*)0=0;
+	assert(unreginfo);
+	assert(unreginfo->vmpath);
+
+	int i = 0;
+	be_card_inner_t* card = (be_card_inner_t*)unreginfo;
+	assert(!card->context);
+	assert(!card->plugin);
+	assert(!card->read_event);
+
+#if 0
+	if (be_la_get_acc_card(unreginfo->vmpath) <= 0) {
+		BE_LA_ERROR("acc card is not exists");
+		return 0;
+	}
+#endif
+
+	for (i = 0; i < ACC_CARD_MAX_NUM; i++) {
+			if (g_acc_cards.acc_cards[i] && !strcmp(g_acc_cards.acc_cards[i]->vmpath,unreginfo->vmpath)) {
+				free(g_acc_cards.acc_cards[i]);
+				g_acc_cards.acc_cards[i] = NULL;
+				g_acc_cards.reg_num--;
+				break;
+		}
+	}
 	return 0;
 }
 
