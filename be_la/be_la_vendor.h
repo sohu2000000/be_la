@@ -16,6 +16,8 @@ enum tag_model {
     XILINX_VU3P,
     XILINX_VU9P,
     MLNX_CX516A,
+    /*INTEL QAT*/
+    QAT_DH8950,
     MODEL_MAX
 };
 
