@@ -20,6 +20,7 @@
 #include "be_module.h"
 #include "be_la_log.h"
 #include "be_acc_msg.h"
+#include "ssh_remote_exec.h"
 
 #define GET_BYTE(value,idx) value[idx]
 
@@ -30,9 +31,8 @@
 		GET_BYTE(value, 2), GET_BYTE(value, 3),GET_BYTE(value, 4), \
 		GET_BYTE(value, 5)
 
-static inline char* _print_port(uint16_t port,char*buffer)
-{
-	sprintf(buffer,"%d",port);
+static inline char* _print_port(uint16_t port, char*buffer) {
+	sprintf(buffer, "%d", port);
 	return buffer;
 }
 static inline char* _print_ip(uint32_t ip, char*buffer) {
@@ -66,16 +66,14 @@ char* print_mac2(uint8_t mac[6]) {
 	return _print_mac(mac, buffer);
 }
 
-char* print_port1(uint16_t port)
-{
-	static char buffer[8];//"65535"
-	return _print_port(port,buffer);
+char* print_port1(uint16_t port) {
+	static char buffer[8]; //"65535"
+	return _print_port(port, buffer);
 }
 
-char* print_port2(uint16_t port)
-{
-	static char buffer[8];//"65535"
-	return _print_port(port,buffer);
+char* print_port2(uint16_t port) {
+	static char buffer[8]; //"65535"
+	return _print_port(port, buffer);
 }
 
 struct acc_ofctl_rule {
@@ -107,8 +105,8 @@ static inline int acc_ovs_build_ofctl_rule(struct acc_ofctl_rule*rule,
 #define _FARG(name,key,func) _PK(flow,name,key) ,\
 		_PV(flow,name,key,func)
 
-	int ret = snprintf(rule->match, sizeof(rule->match),"%s%s %s%s ip %s%s %s%s",
-			_FARG(srcmac, " eth_src=", print_mac1),
+	int ret = snprintf(rule->match, sizeof(rule->match),
+			"%s%s %s%s ip %s%s %s%s", _FARG(srcmac, " eth_src=", print_mac1),
 			_FARG(dstmac, " eth_dst=", print_mac2),
 			_FARG(src_ip, " nw_src=", print_ip1),
 			_FARG(dst_ip, " nw_dst=", print_ip2));
@@ -123,15 +121,20 @@ static inline int acc_ovs_build_ofctl_rule(struct acc_ofctl_rule*rule,
 	//	snprintf(((char*)rule->match)+ret,"icmp %s %s",_FARG());
 	//	break;
 	case 6:	//tcp
-		ret = snprintf(((char*) rule->match) + use_len ,sizeof(rule->match)-use_len, " tcp %s%s %s%s",
-				_FARG(src_port, " tcp_src=",print_port1), _FARG(dst_port, " tcp_dst=",print_port2));
+		ret = snprintf(((char*) rule->match) + use_len,
+				sizeof(rule->match) - use_len, " tcp %s%s %s%s",
+				_FARG(src_port, " tcp_src=", print_port1),
+				_FARG(dst_port, " tcp_dst=", print_port2));
 		break;
 	case 17:	//udp
-		ret = snprintf(((char*) rule->match) + use_len, sizeof(rule->match)-use_len," udp %s%s %s%s",
-				_FARG(src_port, " udp_src=",print_port1), _FARG(dst_port, " udp_dst=",print_port2));
+		ret = snprintf(((char*) rule->match) + use_len,
+				sizeof(rule->match) - use_len, " udp %s%s %s%s",
+				_FARG(src_port, " udp_src=", print_port1),
+				_FARG(dst_port, " udp_dst=", print_port2));
 		break;
 	default:
-		ACC_ERROR("no support protocol %d\n", flow->match.protocol);
+		ACC_ERROR("no support protocol %d\n", flow->match.protocol)
+		;
 		return -1;
 	}
 
@@ -147,12 +150,14 @@ static inline int acc_ovs_build_ofctl_rule(struct acc_ofctl_rule*rule,
 #define _PK(flow,name,key)      ACC_ACTION_IS_FIELD_MASK_SET(flow->action,name)? key:""
 #define _PV(flow,name,key,func) ACC_ACTION_IS_FIELD_MASK_SET(flow->action,name)? func(flow->action.u.field_update.name):""
 	//build action
-	ret = snprintf(rule->action,sizeof(rule->action), " actions=%s%s %s%s %s%s  %s%s %s%s %s%s output:normal",
+	ret = snprintf(rule->action, sizeof(rule->action),
+			" actions=%s%s %s%s %s%s  %s%s %s%s %s%s output:normal",
 			_FARG(srcmac, " mod_dl_src:", print_mac1),
 			_FARG(dstmac, " mod_dl_dst:", print_mac2),
 			_FARG(src_ip, " mod_nw_src:", print_ip1),
 			_FARG(dst_ip, " mod_nw_dst:", print_ip2),
-			_FARG(src_port, " mod_tp_src:",print_port1), _FARG(dst_port, " mod_tp_dst:",print_port2));
+			_FARG(src_port, " mod_tp_src:", print_port1),
+			_FARG(dst_port, " mod_tp_dst:", print_port2));
 	if (ret < 0 || ret >= sizeof(rule->action)) {
 		ACC_ERROR("build rule fail(ethnet and ipaddr)!\n");
 		return -1;
@@ -187,6 +192,27 @@ static inline struct acc_ofctl_rule* acc_ovs_make_ofctl_rules(
 	}
 }
 
+static inline int execute_openflow_rule(struct acc_context*state, char*rule) {
+	//ACC_LOG("execute :%s\n", rule);
+	if (state->ssh_remote) {
+		struct ssh_remote_execute* remote = state->ssh_remote;
+		ACC_LOG("execute: ssh -p %d %s@%s '%s'",remote->username,remote->port,remote->remote_ip,rule);
+		if (ssh_remote_exec(remote->remote_ip, remote->username, remote->port,
+				remote->password, rule)) {
+			ACC_ERROR("execute command line '%s' fail!\n", rule);
+			return -1;
+		}
+		return 0;
+	}
+
+	ACC_LOG("execute :%s\n", rule);
+	if (system(rule)) {
+		ACC_ERROR("execute command line '%s' fail,error=%s!\n", rule,strerror(errno));
+		return -1;
+	}
+	return 0;
+}
+
 int acc_ovs_flush_rules(struct acc_context*state) {
 	int ret;
 	char buffer[4096];
@@ -204,13 +230,17 @@ int acc_ovs_flush_rules(struct acc_context*state) {
 		return -1;
 	}
 
+#if 0
 	ACC_LOG("execute :%s\n", buffer);
 	if (system(buffer)) {
 		ACC_ERROR("execute command line '%s' fail!\n", buffer);
 		return -1;
 	}
-
 	return 0;
+#else
+	return execute_openflow_rule(state, buffer);
+#endif
+
 }
 
 static inline int acc_ovs_edit_rules(struct acc_context*state,
@@ -234,15 +264,14 @@ static inline int acc_ovs_edit_rules(struct acc_context*state,
 		ret = snprintf(buffer, sizeof(buffer),
 				"ovs-ofctl %s %s 'cookie=0X%X priority=%d table=%d %s %s'",
 				is_delete ? "del-flow" : "add-flow", state->bridge,
-				rules[i].cookie, rules[i].priority, rules[i].table,rules[i].match,rules[i].action);
+				rules[i].cookie, rules[i].priority, rules[i].table,
+				rules[i].match, rules[i].action);
 		if (ret < 0 || ret >= sizeof(buffer)) {
 			ACC_ERROR("build command line fail!\n");
 			goto FREE_OFCTL_RULES;
 		}
 
-		ACC_LOG("execute :%s\n", buffer);
-		if (system(buffer)) {
-			ACC_ERROR("execute command line '%s' fail!\n", buffer);
+		if (execute_openflow_rule(state, buffer)) {
 			goto FREE_OFCTL_RULES;
 		}
 	}
@@ -258,7 +287,8 @@ static inline int acc_ovs_edit_rules(struct acc_context*state,
 	}
 }
 
-int acc_ovs_add_rules(struct acc_context*state, struct acc_flow*flows, int n_flows) {
+int acc_ovs_add_rules(struct acc_context*state, struct acc_flow*flows,
+		int n_flows) {
 	return acc_ovs_edit_rules(state, flows, n_flows, 0);
 }
 
@@ -277,5 +307,5 @@ static int acc_ovs_rule_be_register() {
 
 }
 
-module_init(1,acc_ovs_rule_be_register);
+module_init(1, acc_ovs_rule_be_register);
 

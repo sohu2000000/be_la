@@ -16,6 +16,7 @@ struct acc_context* acc_context_alloc() {
 		ACC_ERROR("alloc fd_state fail!\n");
 		return NULL;
 	}
+	memset(state,0,sizeof(*state));
 	return state;
 }
 

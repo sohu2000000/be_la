@@ -14,13 +14,16 @@ extern enum log_level g_log_level;
 
 void be_la_log_print(int fd,const char*fmt,...);
 
-#define BE_LA_LOG_COMMON(level,fmt,...)\
-	do{\
+#define BE_LA_LOG_INNER(level,fmt,...)\
+do{\
 		if(level >= g_log_level)\
 		{\
-			be_la_log_print(1,"be_la[%s:%d]: "fmt,__FILE__,__LINE__,##__VA_ARGS__);\
+			be_la_log_print(1,fmt,##__VA_ARGS__);\
 		}\
 }while(0)
+
+#define BE_LA_LOG_COMMON(level,fmt,...)\
+	BE_LA_LOG_INNER(level,"be_la[%s:%d]: "fmt,__FILE__,__LINE__,##__VA_ARGS__);
 
 #define BE_LA_LOG(fmt,...)\
 	BE_LA_LOG_COMMON(BE_LA_LEVEL_LOG,fmt,##__VA_ARGS__)

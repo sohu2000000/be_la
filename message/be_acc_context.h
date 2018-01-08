@@ -8,6 +8,14 @@
 #ifndef MESSAGE_BE_CONTEXT_H_
 #define MESSAGE_BE_CONTEXT_H_
 
+struct ssh_remote_execute
+{
+	char*remote_ip;
+	char*username;
+	char*password;
+	int port;
+};
+
 struct acc_context {
 	char hostname[256];
 	char bridge[256];
@@ -19,6 +27,7 @@ struct acc_context {
 	//size_t write_upto;
 	struct event*read_event;
 	//struct event*write_event;
+	struct ssh_remote_execute*ssh_remote;
 };
 
 struct acc_context* acc_context_alloc();

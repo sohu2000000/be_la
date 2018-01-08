@@ -18,6 +18,8 @@ enum tag_model {
     MLNX_CX516A,
     /*INTEL QAT*/
     QAT_DH8950,
+	/*cavium liquidio*/
+	LIQUIDIO_II,
     MODEL_MAX
 };
 
