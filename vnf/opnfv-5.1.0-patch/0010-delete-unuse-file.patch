@@ -1,0 +1,68 @@
+From 3df1520142bb06ee87e4a9debd968d4adf46116b Mon Sep 17 00:00:00 2001
+From: anlaneg <anlaneg@example.com>
+Date: Mon, 29 Jan 2018 14:16:06 +0800
+Subject: [PATCH 10/10] delete unuse file
+
+---
+ acc_swlb_2000_flow.tc    | 14 --------------
+ sample_swlb_2port_2WT.tc | 27 ---------------------------
+ 2 files changed, 41 deletions(-)
+ delete mode 100644 acc_swlb_2000_flow.tc
+ delete mode 100644 sample_swlb_2port_2WT.tc
+
+diff --git a/acc_swlb_2000_flow.tc b/acc_swlb_2000_flow.tc
+deleted file mode 100644
+index b7481ea..0000000
+--- a/acc_swlb_2000_flow.tc
++++ /dev/null
+@@ -1,14 +0,0 @@
+-
+-link 0 down
+-link 0 config 192.168.49.100 24
+-link 0 up
+-link 1 down
+-link 1 config 172.16.49.100 24
+-link 1 up
+-
+-p 1 arpadd 0 192.168.49.2  52:54:00:ab:d7:49
+-p 1 arpadd 1 172.16.49.202 52:54:00:04:2b:b5
+-
+-
+-p 5 entry add 192.168.49.2 1024 172.16.49.100 1024 0 500
+-p 5 entry add 192.168.49.2 1025 172.16.49.100 1025 0 500
+diff --git a/sample_swlb_2port_2WT.tc b/sample_swlb_2port_2WT.tc
+deleted file mode 100644
+index d746569..0000000
+--- a/sample_swlb_2port_2WT.tc
++++ /dev/null
+@@ -1,27 +0,0 @@
+-
+-link 0 down
+-link 0 config 202.16.100.21 24
+-link 0 up
+-link 1 down
+-link 1 config 172.16.40.21 24
+-link 1 up
+-
+-
+-; uncomment to enable static NAPT
+-;p <cgnapt pipeline id> entry addm <prv_ipv4/6> prvport> <pub_ip> <pub_port> <phy_port> <ttl> <no_of_entries> <end_prv_port> <end_pub_port>
+-;p 5 entry addm 202.16.100.20 1234 152.16.40.10 1 0 500 65535 1234 65535
+-
+-; uncomment below lines to enable static arp
+-;p 1 arpadd 0 202.16.100.20 00:00:00:00:00:01
+-;p 1 arpadd 1 172.16.40.20 00:00:00:00:00:02
+-
+-; uncomment below lines to enable static arp
+-;p 1 arpadd 0 0064:ff9b:0:0:0:0:ca10:6414 00:00:00:00:00:01
+-;p 1 arpadd 1 0064:ff9b:0:0:0:0:ac10:2814 00:00:00:00:00:02
+-
+-routeadd 0 202.16.100.20 0xff000000
+-routeadd 1 172.16.40.20  0xff000000
+-
+-; routeadd <net/host> <port #> <ipv4 nhip address in decimal> <Mask/NotApplicable>
+-;routeadd net 0 0064:ff9b:0:0:0:0:ca10:6414 64
+-;routeadd net 1 0064:ff9b:0:0:0:0:ac10:6414 64
+-- 
+2.7.4
+

@@ -1,0 +1,24 @@
+From 3f41e9dac08e69626f4b2dc8ce610186948b3647 Mon Sep 17 00:00:00 2001
+From: anlang <anlang@example.com>
+Date: Mon, 29 Jan 2018 10:27:09 +0800
+Subject: [PATCH 09/10] =?UTF-8?q?=E3=80=80add=20setup=20script?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ Setup.sh | 2 ++
+ 1 file changed, 2 insertions(+)
+ create mode 100755 Setup.sh
+
+diff --git a/Setup.sh b/Setup.sh
+new file mode 100755
+index 0000000..ec7e017
+--- /dev/null
++++ b/Setup.sh
+@@ -0,0 +1,2 @@
++#! /bin/bash
++sudo ./tools/vnf_build.sh -s -d=17.05
+-- 
+2.7.4
+

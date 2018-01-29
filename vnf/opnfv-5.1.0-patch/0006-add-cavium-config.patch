@@ -1,0 +1,392 @@
+From b5ba929c918d83985fc8fe762b0318e709c11de6 Mon Sep 17 00:00:00 2001
+From: anlang <anlang@example.com>
+Date: Fri, 26 Jan 2018 18:15:23 +0800
+Subject: [PATCH 06/10] add cavium config
+
+---
+ acc_swlb_2port_2WT.cfg        | 125 ------------------------------------------
+ cavium/acc_swlb_2port_2WT.cfg | 125 ++++++++++++++++++++++++++++++++++++++++++
+ cavium/gen-flow-common.sh     |  12 ++++
+ dpdk-devbind.sh               |  61 +++++++++++++++++----
+ gen-flow-common.sh            |  12 ----
+ 5 files changed, 186 insertions(+), 149 deletions(-)
+ delete mode 100644 acc_swlb_2port_2WT.cfg
+ create mode 100644 cavium/acc_swlb_2port_2WT.cfg
+ create mode 100755 cavium/gen-flow-common.sh
+ delete mode 100755 gen-flow-common.sh
+
+diff --git a/acc_swlb_2port_2WT.cfg b/acc_swlb_2port_2WT.cfg
+deleted file mode 100644
+index 4d6e73f..0000000
+--- a/acc_swlb_2port_2WT.cfg
++++ /dev/null
+@@ -1,125 +0,0 @@
+-[EAL]
+-w = 0000:00:02.0
+-w = 0000:00:08.0
+-
+-[PIPELINE0]
+-type = MASTER
+-core = 0
+-
+-[PIPELINE1]
+-type = ARPICMP
+-core = 0
+-pktq_in = SWQ0
+-pktq_out = SWQ7
+-
+-#仅解析了port,未解析队列id,但没有使用
+-pktq_in_prv = RXQ0.0
+-#完成了解析，但没有使用
+-prv_to_pub_map = (0, 1)
+-
+-#定义路由表（网段，掩码，出接口，网关ip)
+-#对于ip均要已完成转码
+-#arp_route_tbl= (%x,%x,%x,%x) (%x,%x,%x,%x) ....
+-#arp_route_tbl= ( c8c8c8c8,ffffffff,1,C0A83A63 ) ( C0A83A63,ffffffff,1,C0A83A63 )
+-#192.168.49.100,255.255.255.0,0,192.168.49.2
+-#172.16.49.100,255.255.255.0,1,172.16.49.202
+-arp_route_tbl= (C0A83164,ffffff00,0,C0A83102) (AC103164,ffffff00,1,AC1031CA)
+-lib_arp_debug=1
+-ports_mac_list= 52:54:00:86:8b:87 52:54:00:4e:9c:6a
+-[PIPELINE2]
+-type = TIMER
+-core = 0
+-#将被提升为2的N次方的整数值，用于申请timer数量，占用内存
+-n_flows = 8192
+-
+-[PIPELINE3]
+-type = TXRX
+-core = 1
+-#RXRX模式会将收到的arp,icmp报文重定向至pktq_out的最后一个队列，
+-#而TXTX不具有这个能力，其它没区别
+-pipeline_txrx_type = RXRX
+-#完成了解析，但没有使用
+-#dest_if_offset = 176
+-#//对应RXQ<rxq-link-id>.<rxq_queue_id>
+-pktq_in = RXQ0.0 RXQ1.0
+-#//pktq_out与pktq_in一一映射，SWQ0将被重定向用于处理icmparp
+-pktq_out = SWQ1 SWQ2 SWQ0
+-
+-[PIPELINE4]
+-type = LOADB
+-core = 1
+-pktq_in = SWQ1 SWQ2
+-pktq_out = SWQ3 SWQ4 
+-#loadblance用于在mbuf中存放出接口的位置，解析时采用atoi进行解析
+-#故后面的'; 8'实际上不生效，仅会返回136
+-outport_offset = 136; 8
+-#指明后端有多少个vnf线程，用于在loadblance时分组
+-n_vnf_threads = 1
+-#有解析，未见使用
+-prv_que_handler = (0,)
+-cgnapt_debug=10
+-
+-[PIPELINE5]
+-type = CGNAPT
+-core = 3
+-pktq_in = SWQ3 SWQ4
+-pktq_out = SWQ5 SWQ6
+-#目前无意义
+-phyport_offset = 204
+-#支持多少条流（会提升到2的N次方）
+-n_flows = 8192
+-#目前没有用到
+-key_offset = 192;64
+-#目前没有用到
+-key_size = 8
+-#目前没有用到
+-hash_offset = 200;72
+-#cgnat有一些周期性的事务，例如配置处理，每隔一段时间，我们需要检查是否有前端配置需要处理
+-#故检查周期即由此定义，此值单位为ms
+-timer_period = 100
+-#每个ip最多容许多少client
+-max_clients_per_ip = 65535
+-#一个ip最多容许被分配多少个port(做多少次nat)
+-max_port_per_client = 10
+-#指明ip的port range段，格式"%x:(%d,%d)"
+-#public_ip_port_range = 98103214:(1, 65535)
+-#配置的值目前不生效，仅用于计数（配置了可使此值为0）
+-vnf_set = (3,4,5)
+-#处理ipv4地址
+-pkt_type = ipv4
+-#如何从pkt中拿到对应的出接口id（由于一个rte_mbuf是2个cacheline大小，共meta内容实际上是放在headroom中的）
+-cgnapt_meta_offset = 128
+-prv_que_handler = (0,)
+-#指明debug形式，默认为0，依代码来看，最详细可以配置大于4
+-#此log非常随心
+-cgnapt_debug=10
+-#[PIPELINE6]
+-#type = CGNAPT
+-#core = 3
+-#pktq_in = SWQ5 SWQ6
+-#pktq_out = SWQ9 SWQ10
+-#phyport_offset = 204
+-#n_flows = 1048576
+-#key_offset = 192;64
+-#key_size = 8
+-#hash_offset = 200;72
+-#timer_period = 100
+-#max_clients_per_ip = 65535
+-#max_port_per_client = 10
+-#pkt_type = ipv4
+-#cgnapt_meta_offset = 128
+-#prv_que_handler = (0,)
+-
+-[PIPELINE6]
+-type = TXRX
+-core = 3
+-pipeline_txrx_type = TXTX
+-#没有被用到
+-#dest_if_offset = 176
+-#pktq_in = SWQ9 SWQ10 SWQ7 SWQ8 SWQ11
+-pktq_in = SWQ5 SWQ6 SWQ7
+-#对应的TXQ<txq_link_id>.<txq_queue_id>
+-#发送到指定的link的对应队列
+-#这里的pktq_in比pktq_out多一个队列(暂未明白原因？）
+-#pktq_out = TXQ0.0 TXQ1.0 TXQ0.1 TXQ1.1
+-pktq_out =  TXQ0.0 TXQ1.0 
+diff --git a/cavium/acc_swlb_2port_2WT.cfg b/cavium/acc_swlb_2port_2WT.cfg
+new file mode 100644
+index 0000000..caf4cc3
+--- /dev/null
++++ b/cavium/acc_swlb_2port_2WT.cfg
+@@ -0,0 +1,125 @@
++[EAL]
++w = 0000:00:08.0
++w = 0000:00:0a.0
++
++[PIPELINE0]
++type = MASTER
++core = 0
++
++[PIPELINE1]
++type = ARPICMP
++core = 0
++pktq_in = SWQ0
++pktq_out = SWQ7
++
++#仅解析了port,未解析队列id,但没有使用
++pktq_in_prv = RXQ0.0
++#完成了解析，但没有使用
++prv_to_pub_map = (0, 1)
++
++#定义路由表（网段，掩码，出接口，网关ip)
++#对于ip均要已完成转码
++#arp_route_tbl= (%x,%x,%x,%x) (%x,%x,%x,%x) ....
++#arp_route_tbl= ( c8c8c8c8,ffffffff,1,C0A83A63 ) ( C0A83A63,ffffffff,1,C0A83A63 )
++#192.168.49.100,255.255.255.0,0,192.168.49.2
++#172.16.49.100,255.255.255.0,1,172.16.49.202
++arp_route_tbl= (C0A83164,ffffff00,0,C0A83102) (AC103164,ffffff00,1,AC1031CA)
++lib_arp_debug=1
++#ports_mac_list= 52:54:00:86:8b:87 52:54:00:4e:9c:6a
++[PIPELINE2]
++type = TIMER
++core = 0
++#将被提升为2的N次方的整数值，用于申请timer数量，占用内存
++n_flows = 8192
++
++[PIPELINE3]
++type = TXRX
++core = 1
++#RXRX模式会将收到的arp,icmp报文重定向至pktq_out的最后一个队列，
++#而TXTX不具有这个能力，其它没区别
++pipeline_txrx_type = RXRX
++#完成了解析，但没有使用
++#dest_if_offset = 176
++#//对应RXQ<rxq-link-id>.<rxq_queue_id>
++pktq_in = RXQ0.0 RXQ1.0
++#//pktq_out与pktq_in一一映射，SWQ0将被重定向用于处理icmparp
++pktq_out = SWQ1 SWQ2 SWQ0
++
++[PIPELINE4]
++type = LOADB
++core = 1
++pktq_in = SWQ1 SWQ2
++pktq_out = SWQ3 SWQ4 
++#loadblance用于在mbuf中存放出接口的位置，解析时采用atoi进行解析
++#故后面的'; 8'实际上不生效，仅会返回136
++outport_offset = 136; 8
++#指明后端有多少个vnf线程，用于在loadblance时分组
++n_vnf_threads = 1
++#有解析，未见使用
++prv_que_handler = (0,)
++cgnapt_debug=10
++
++[PIPELINE5]
++type = CGNAPT
++core = 3
++pktq_in = SWQ3 SWQ4
++pktq_out = SWQ5 SWQ6
++#目前无意义
++phyport_offset = 204
++#支持多少条流（会提升到2的N次方）
++n_flows = 8192
++#目前没有用到
++key_offset = 192;64
++#目前没有用到
++key_size = 8
++#目前没有用到
++hash_offset = 200;72
++#cgnat有一些周期性的事务，例如配置处理，每隔一段时间，我们需要检查是否有前端配置需要处理
++#故检查周期即由此定义，此值单位为ms
++timer_period = 100
++#每个ip最多容许多少client
++max_clients_per_ip = 65535
++#一个ip最多容许被分配多少个port(做多少次nat)
++max_port_per_client = 10
++#指明ip的port range段，格式"%x:(%d,%d)"
++#public_ip_port_range = 98103214:(1, 65535)
++#配置的值目前不生效，仅用于计数（配置了可使此值为0）
++vnf_set = (3,4,5)
++#处理ipv4地址
++pkt_type = ipv4
++#如何从pkt中拿到对应的出接口id（由于一个rte_mbuf是2个cacheline大小，共meta内容实际上是放在headroom中的）
++cgnapt_meta_offset = 128
++prv_que_handler = (0,)
++#指明debug形式，默认为0，依代码来看，最详细可以配置大于4
++#此log非常随心
++cgnapt_debug=10
++#[PIPELINE6]
++#type = CGNAPT
++#core = 3
++#pktq_in = SWQ5 SWQ6
++#pktq_out = SWQ9 SWQ10
++#phyport_offset = 204
++#n_flows = 1048576
++#key_offset = 192;64
++#key_size = 8
++#hash_offset = 200;72
++#timer_period = 100
++#max_clients_per_ip = 65535
++#max_port_per_client = 10
++#pkt_type = ipv4
++#cgnapt_meta_offset = 128
++#prv_que_handler = (0,)
++
++[PIPELINE6]
++type = TXRX
++core = 3
++pipeline_txrx_type = TXTX
++#没有被用到
++#dest_if_offset = 176
++#pktq_in = SWQ9 SWQ10 SWQ7 SWQ8 SWQ11
++pktq_in = SWQ5 SWQ6 SWQ7
++#对应的TXQ<txq_link_id>.<txq_queue_id>
++#发送到指定的link的对应队列
++#这里的pktq_in比pktq_out多一个队列(暂未明白原因？）
++#pktq_out = TXQ0.0 TXQ1.0 TXQ0.1 TXQ1.1
++pktq_out =  TXQ0.0 TXQ1.0 
+diff --git a/cavium/gen-flow-common.sh b/cavium/gen-flow-common.sh
+new file mode 100755
+index 0000000..c12b32f
+--- /dev/null
++++ b/cavium/gen-flow-common.sh
+@@ -0,0 +1,12 @@
++echo "
++link 0 down
++link 0 config 192.168.49.100 24
++link 0 up
++link 1 down
++link 1 config 172.16.49.100 24
++link 1 up
++
++p 1 arpadd 0 192.168.49.2 52:54:00:fc:92:79
++p 1 arpadd 1 172.16.49.202 52:54:00:14:31:b7
++
++"
+diff --git a/dpdk-devbind.sh b/dpdk-devbind.sh
+index 92a497e..640bc8e 100755
+--- a/dpdk-devbind.sh
++++ b/dpdk-devbind.sh
+@@ -1,20 +1,57 @@
+ #! /bin/bash
+ ROOT=`pwd`
+ dpdk_nic_bind=$ROOT/dpdk/usertools/dpdk-devbind.py
+-#nic_filter="Eth.*Copper"
+-nic_filter="Netronome Systems"
+ 
+-#cfg_file="sample_swlb_2port_1WT.cfg"
+-cfg_file="acc_swlb_2port_2WT.cfg"
+-#tc_file="sample_swlb_2port_2WT.tc"
+-tc_file="./acc_swlb_2000_flow.tc"
+-./gen-flow-common.sh >  $tc_file
+-./gen-2000-flow.sh   >> $tc_file
++function get_pci_list_by_vendor()
++{
++	vendor_finger_print="$1"
++        pci_list=`lspci | grep "$vendor_finger_print" | cut -d ' ' -f 1  | tr "\n" " "`
++        echo "$pci_list"
++}
++
++function do_dpdk_nic_bind()
++{
++	pci_list="$1"
++	echo $pci_list
++	sudo $dpdk_nic_bind -b igb_uio $pci_list
++	sudo $dpdk_nic_bind --status
++}
++
++
++MYVM_FILTER="Eth.*Copper"
++NETRONOME_FILTER="Netronome Systems"
++CAVIUM_FILTER="Cavium, Inc."
+ 
+-pci_list=`lspci | grep "$nic_filter" | cut -d ' ' -f 1  | tr "\n" " "`
+-echo $pci_list
+-sudo $dpdk_nic_bind -b igb_uio $pci_list
+-sudo $dpdk_nic_bind --status
++function get_env_name()
++{
++	my_vm=`get_pci_list_by_vendor $MYVM_FILTER`
++        netronome=`get_pci_list_by_vendor $NETRONOME_FILTER`
++        cavium=`get_pci_list_by_vendor $CAVIUM_FILTER`
++
++	if [ ! -z "$my_vm" ];
++	then
++		do_dpdk_nic_bind "$my_vm"
++		echo "ENV:myvm"
++        elif [ ! -z "$netronome" ];
++	then
++		do_dpdk_nic_bind "$netronome"
++		echo "ENV:netronome"
++	elif [ ! -z "$cavium" ];
++	then
++		do_dpdk_nic_bind "$cavium"
++		echo "ENV:cavium";
++	else
++		echo "ENV:unkown"
++	fi;
++}
++
++env_name=`get_env_name|grep "^ENV:"|cut -d':' -f 2`
++cfg_file="./$env_name/acc_swlb_2port_2WT.cfg"
++tc_file="./acc_swlb_2000_flow.tc"
++./$env_name/gen-flow-common.sh $env_name >  $tc_file
++./gen-2000-flow.sh   $env_name >> $tc_file
+ 
++echo "use config file: $cfg_file"
++echo "use testcasse file: $tc_file"
+ sudo gdb --args $ROOT/VNFs/vCGNAPT/build/vCGNAPT -p 0x3 -f $cfg_file  -s $tc_file
+ 
+diff --git a/gen-flow-common.sh b/gen-flow-common.sh
+deleted file mode 100755
+index a4cc3e6..0000000
+--- a/gen-flow-common.sh
++++ /dev/null
+@@ -1,12 +0,0 @@
+-echo "
+-link 0 down
+-link 0 config 192.168.49.100 24
+-link 0 up
+-link 1 down
+-link 1 config 172.16.49.100 24
+-link 1 up
+-
+-p 1 arpadd 0 192.168.49.2  52:54:00:ab:d7:49
+-p 1 arpadd 1 172.16.49.202 52:54:00:04:2b:b5
+-
+-"
+-- 
+2.7.4
+

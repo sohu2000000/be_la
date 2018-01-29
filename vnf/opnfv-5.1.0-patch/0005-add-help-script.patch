@@ -1,0 +1,26 @@
+From c8f919ed3854d307cee1e52e2c010b271f5ef9eb Mon Sep 17 00:00:00 2001
+From: anlang <anlang@example.com>
+Date: Fri, 26 Jan 2018 17:25:58 +0800
+Subject: [PATCH 05/10] add help script
+
+---
+ build-vCGNAPT.sh | 7 +++++++
+ 1 file changed, 7 insertions(+)
+ create mode 100755 build-vCGNAPT.sh
+
+diff --git a/build-vCGNAPT.sh b/build-vCGNAPT.sh
+new file mode 100755
+index 0000000..e2079b7
+--- /dev/null
++++ b/build-vCGNAPT.sh
+@@ -0,0 +1,7 @@
++export VNF_CORE=`pwd`
++DPDK_DIR=/home/cgnat/workspace/dpdk_17_05/dpdk
++export RTE_SDK=$DPDK_DIR
++export RTE_TARGET=x86_64-native-linuxapp-gcc
++make clean
++make EXTRA_CFLAGS="-O0 -g" || { echo -e "\nVNF: Make failed\n"; }
++
+-- 
+2.7.4
+

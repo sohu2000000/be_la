@@ -1,0 +1,51 @@
+From a7a307c9d2a249fa7e5ce9f8b43631c1a1136e9a Mon Sep 17 00:00:00 2001
+From: anlang <anlang@example.com>
+Date: Mon, 29 Jan 2018 10:06:35 +0800
+Subject: [PATCH 07/10] add netronome; add xilinx
+
+---
+ netrnome/gen-flow-common.sh | 12 ++++++++++++
+ xilinx/gen-flow-common.sh   | 12 ++++++++++++
+ 2 files changed, 24 insertions(+)
+ create mode 100755 netrnome/gen-flow-common.sh
+ create mode 100755 xilinx/gen-flow-common.sh
+
+diff --git a/netrnome/gen-flow-common.sh b/netrnome/gen-flow-common.sh
+new file mode 100755
+index 0000000..c12b32f
+--- /dev/null
++++ b/netrnome/gen-flow-common.sh
+@@ -0,0 +1,12 @@
++echo "
++link 0 down
++link 0 config 192.168.49.100 24
++link 0 up
++link 1 down
++link 1 config 172.16.49.100 24
++link 1 up
++
++p 1 arpadd 0 192.168.49.2 52:54:00:fc:92:79
++p 1 arpadd 1 172.16.49.202 52:54:00:14:31:b7
++
++"
+diff --git a/xilinx/gen-flow-common.sh b/xilinx/gen-flow-common.sh
+new file mode 100755
+index 0000000..c12b32f
+--- /dev/null
++++ b/xilinx/gen-flow-common.sh
+@@ -0,0 +1,12 @@
++echo "
++link 0 down
++link 0 config 192.168.49.100 24
++link 0 up
++link 1 down
++link 1 config 172.16.49.100 24
++link 1 up
++
++p 1 arpadd 0 192.168.49.2 52:54:00:fc:92:79
++p 1 arpadd 1 172.16.49.202 52:54:00:14:31:b7
++
++"
+-- 
+2.7.4
+

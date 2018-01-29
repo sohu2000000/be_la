@@ -1,0 +1,361 @@
+From f94c47a65ffc48ce829274a0b27db867c8ec94fa Mon Sep 17 00:00:00 2001
+From: anlang <anlang@example.com>
+Date: Wed, 24 Jan 2018 15:36:42 +0800
+Subject: [PATCH 03/10] add script;2.add nfp patch
+
+---
+ acc_swlb_2000_flow.tc                              |  14 +++
+ acc_swlb_2port_2WT.cfg                             | 125 +++++++++++++++++++++
+ dpdk-devbind.sh                                    |  13 ++-
+ gen-2000-flow.sh                                   |   9 ++
+ gen-flow-common.sh                                 |  12 ++
+ .../dpdk_custom_patch/nfp-driver-set-inport.patch  |  33 ++++++
+ sample_swlb_2port_1WT.cfg                          |  65 -----------
+ tools/vnf_build.sh                                 |   2 +
+ 8 files changed, 204 insertions(+), 69 deletions(-)
+ create mode 100644 acc_swlb_2000_flow.tc
+ create mode 100644 acc_swlb_2port_2WT.cfg
+ create mode 100755 gen-2000-flow.sh
+ create mode 100755 gen-flow-common.sh
+ create mode 100644 patches/dpdk_custom_patch/nfp-driver-set-inport.patch
+ delete mode 100644 sample_swlb_2port_1WT.cfg
+
+diff --git a/acc_swlb_2000_flow.tc b/acc_swlb_2000_flow.tc
+new file mode 100644
+index 0000000..b7481ea
+--- /dev/null
++++ b/acc_swlb_2000_flow.tc
+@@ -0,0 +1,14 @@
++
++link 0 down
++link 0 config 192.168.49.100 24
++link 0 up
++link 1 down
++link 1 config 172.16.49.100 24
++link 1 up
++
++p 1 arpadd 0 192.168.49.2  52:54:00:ab:d7:49
++p 1 arpadd 1 172.16.49.202 52:54:00:04:2b:b5
++
++
++p 5 entry add 192.168.49.2 1024 172.16.49.100 1024 0 500
++p 5 entry add 192.168.49.2 1025 172.16.49.100 1025 0 500
+diff --git a/acc_swlb_2port_2WT.cfg b/acc_swlb_2port_2WT.cfg
+new file mode 100644
+index 0000000..4d6e73f
+--- /dev/null
++++ b/acc_swlb_2port_2WT.cfg
+@@ -0,0 +1,125 @@
++[EAL]
++w = 0000:00:02.0
++w = 0000:00:08.0
++
++[PIPELINE0]
++type = MASTER
++core = 0
++
++[PIPELINE1]
++type = ARPICMP
++core = 0
++pktq_in = SWQ0
++pktq_out = SWQ7
++
++#仅解析了port,未解析队列id,但没有使用
++pktq_in_prv = RXQ0.0
++#完成了解析，但没有使用
++prv_to_pub_map = (0, 1)
++
++#定义路由表（网段，掩码，出接口，网关ip)
++#对于ip均要已完成转码
++#arp_route_tbl= (%x,%x,%x,%x) (%x,%x,%x,%x) ....
++#arp_route_tbl= ( c8c8c8c8,ffffffff,1,C0A83A63 ) ( C0A83A63,ffffffff,1,C0A83A63 )
++#192.168.49.100,255.255.255.0,0,192.168.49.2
++#172.16.49.100,255.255.255.0,1,172.16.49.202
++arp_route_tbl= (C0A83164,ffffff00,0,C0A83102) (AC103164,ffffff00,1,AC1031CA)
++lib_arp_debug=1
++ports_mac_list= 52:54:00:86:8b:87 52:54:00:4e:9c:6a
++[PIPELINE2]
++type = TIMER
++core = 0
++#将被提升为2的N次方的整数值，用于申请timer数量，占用内存
++n_flows = 8192
++
++[PIPELINE3]
++type = TXRX
++core = 1
++#RXRX模式会将收到的arp,icmp报文重定向至pktq_out的最后一个队列，
++#而TXTX不具有这个能力，其它没区别
++pipeline_txrx_type = RXRX
++#完成了解析，但没有使用
++#dest_if_offset = 176
++#//对应RXQ<rxq-link-id>.<rxq_queue_id>
++pktq_in = RXQ0.0 RXQ1.0
++#//pktq_out与pktq_in一一映射，SWQ0将被重定向用于处理icmparp
++pktq_out = SWQ1 SWQ2 SWQ0
++
++[PIPELINE4]
++type = LOADB
++core = 1
++pktq_in = SWQ1 SWQ2
++pktq_out = SWQ3 SWQ4 
++#loadblance用于在mbuf中存放出接口的位置，解析时采用atoi进行解析
++#故后面的'; 8'实际上不生效，仅会返回136
++outport_offset = 136; 8
++#指明后端有多少个vnf线程，用于在loadblance时分组
++n_vnf_threads = 1
++#有解析，未见使用
++prv_que_handler = (0,)
++cgnapt_debug=10
++
++[PIPELINE5]
++type = CGNAPT
++core = 3
++pktq_in = SWQ3 SWQ4
++pktq_out = SWQ5 SWQ6
++#目前无意义
++phyport_offset = 204
++#支持多少条流（会提升到2的N次方）
++n_flows = 8192
++#目前没有用到
++key_offset = 192;64
++#目前没有用到
++key_size = 8
++#目前没有用到
++hash_offset = 200;72
++#cgnat有一些周期性的事务，例如配置处理，每隔一段时间，我们需要检查是否有前端配置需要处理
++#故检查周期即由此定义，此值单位为ms
++timer_period = 100
++#每个ip最多容许多少client
++max_clients_per_ip = 65535
++#一个ip最多容许被分配多少个port(做多少次nat)
++max_port_per_client = 10
++#指明ip的port range段，格式"%x:(%d,%d)"
++#public_ip_port_range = 98103214:(1, 65535)
++#配置的值目前不生效，仅用于计数（配置了可使此值为0）
++vnf_set = (3,4,5)
++#处理ipv4地址
++pkt_type = ipv4
++#如何从pkt中拿到对应的出接口id（由于一个rte_mbuf是2个cacheline大小，共meta内容实际上是放在headroom中的）
++cgnapt_meta_offset = 128
++prv_que_handler = (0,)
++#指明debug形式，默认为0，依代码来看，最详细可以配置大于4
++#此log非常随心
++cgnapt_debug=10
++#[PIPELINE6]
++#type = CGNAPT
++#core = 3
++#pktq_in = SWQ5 SWQ6
++#pktq_out = SWQ9 SWQ10
++#phyport_offset = 204
++#n_flows = 1048576
++#key_offset = 192;64
++#key_size = 8
++#hash_offset = 200;72
++#timer_period = 100
++#max_clients_per_ip = 65535
++#max_port_per_client = 10
++#pkt_type = ipv4
++#cgnapt_meta_offset = 128
++#prv_que_handler = (0,)
++
++[PIPELINE6]
++type = TXRX
++core = 3
++pipeline_txrx_type = TXTX
++#没有被用到
++#dest_if_offset = 176
++#pktq_in = SWQ9 SWQ10 SWQ7 SWQ8 SWQ11
++pktq_in = SWQ5 SWQ6 SWQ7
++#对应的TXQ<txq_link_id>.<txq_queue_id>
++#发送到指定的link的对应队列
++#这里的pktq_in比pktq_out多一个队列(暂未明白原因？）
++#pktq_out = TXQ0.0 TXQ1.0 TXQ0.1 TXQ1.1
++pktq_out =  TXQ0.0 TXQ1.0 
+diff --git a/dpdk-devbind.sh b/dpdk-devbind.sh
+index dfff619..92a497e 100755
+--- a/dpdk-devbind.sh
++++ b/dpdk-devbind.sh
+@@ -1,15 +1,20 @@
+ #! /bin/bash
+ ROOT=`pwd`
+ dpdk_nic_bind=$ROOT/dpdk/usertools/dpdk-devbind.py
+-nic_filter="Eth.*Copper"
++#nic_filter="Eth.*Copper"
++nic_filter="Netronome Systems"
+ 
+-cfg_file="sample_swlb_2port_1WT.cfg"
+-tc_file="sample_swlb_2port_2WT.tc"
++#cfg_file="sample_swlb_2port_1WT.cfg"
++cfg_file="acc_swlb_2port_2WT.cfg"
++#tc_file="sample_swlb_2port_2WT.tc"
++tc_file="./acc_swlb_2000_flow.tc"
++./gen-flow-common.sh >  $tc_file
++./gen-2000-flow.sh   >> $tc_file
+ 
+ pci_list=`lspci | grep "$nic_filter" | cut -d ' ' -f 1  | tr "\n" " "`
+ echo $pci_list
+ sudo $dpdk_nic_bind -b igb_uio $pci_list
+ sudo $dpdk_nic_bind --status
+ 
+-gdb --args $ROOT/VNFs//vCGNAPT/build/vCGNAPT -p 0x3 -f $cfg_file  -s $tc_file
++sudo gdb --args $ROOT/VNFs/vCGNAPT/build/vCGNAPT -p 0x3 -f $cfg_file  -s $tc_file
+ 
+diff --git a/gen-2000-flow.sh b/gen-2000-flow.sh
+new file mode 100755
+index 0000000..7973bbd
+--- /dev/null
++++ b/gen-2000-flow.sh
+@@ -0,0 +1,9 @@
++#! /bin/bash
++
++for((i=0;i<2;++i));
++do 
++	echo "p 5 entry add 192.168.49.2 $((i+1024)) 172.16.49.100 $((i+1024)) 0 500"
++       #echo "p 6 entry add 192.168.49.2 $((i+1024)) 172.16.49.100 $((i+1024)) 0 500"; 
++
++done;
++
+diff --git a/gen-flow-common.sh b/gen-flow-common.sh
+new file mode 100755
+index 0000000..a4cc3e6
+--- /dev/null
++++ b/gen-flow-common.sh
+@@ -0,0 +1,12 @@
++echo "
++link 0 down
++link 0 config 192.168.49.100 24
++link 0 up
++link 1 down
++link 1 config 172.16.49.100 24
++link 1 up
++
++p 1 arpadd 0 192.168.49.2  52:54:00:ab:d7:49
++p 1 arpadd 1 172.16.49.202 52:54:00:04:2b:b5
++
++"
+diff --git a/patches/dpdk_custom_patch/nfp-driver-set-inport.patch b/patches/dpdk_custom_patch/nfp-driver-set-inport.patch
+new file mode 100644
+index 0000000..476120b
+--- /dev/null
++++ b/patches/dpdk_custom_patch/nfp-driver-set-inport.patch
+@@ -0,0 +1,33 @@
++--- a/drivers/net/nfp/nfp_net.c	2017-05-11 09:11:34.000000000 +0800
+++++ b/drivers/net/nfp/nfp_net.c	2018-01-16 16:33:07.565329105 +0800
++@@ -1916,6 +1916,7 @@
++ 		}
++ 
++ 		/* Adding the mbuff to the mbuff array passed by the app */
+++		mb->port = rxq->port_id;
++ 		rx_pkts[avail++] = mb;
++ 
++ 		/* Now resetting and updating the descriptor */
++--- a/lib/librte_ether/rte_ethdev.h	2017-02-15 05:17:45.000000000 +0800
+++++ b/lib/librte_ether/rte_ethdev.h	2018-01-16 17:12:27.193139010 +0800
++@@ -171,6 +171,7 @@
++ #endif
++ 
++ #include <stdint.h>
+++#include <assert.h>
++ 
++ #include <rte_dev.h>
++ 
++@@ -2706,7 +2707,12 @@
++ #endif
++ 	int16_t nb_rx = (*dev->rx_pkt_burst)(dev->data->rx_queues[queue_id],
++ 			rx_pkts, nb_pkts);
++-
+++        int16_t idx;
+++        for(idx = 0 ; idx < nb_rx ; ++idx)
+++        {
+++              assert(rx_pkts[idx]->port != 255);
+++        }
+++	
++ #ifdef RTE_ETHDEV_RXTX_CALLBACKS
++ 	struct rte_eth_rxtx_callback *cb = dev->post_rx_burst_cbs[queue_id];
+diff --git a/sample_swlb_2port_1WT.cfg b/sample_swlb_2port_1WT.cfg
+deleted file mode 100644
+index 4a38ec0..0000000
+--- a/sample_swlb_2port_1WT.cfg
++++ /dev/null
+@@ -1,65 +0,0 @@
+-[EAL]
+-w = 00:08.0
+-w = 00:09.1
+-
+-[PIPELINE0]
+-type = MASTER
+-core = 0
+-
+-[PIPELINE1]
+-type = ARPICMP
+-core = 1
+-pktq_in = SWQ0
+-pktq_out = SWQ7
+-
+-pktq_in_prv = RXQ0.0
+-prv_to_pub_map = (0, 1)
+-
+-[PIPELINE2]
+-type = TIMER
+-core = 2
+-n_flows = 8192
+-
+-[PIPELINE3]
+-type = TXRX
+-core = 3
+-pipeline_txrx_type = RXRX
+-dest_if_offset = 176
+-pktq_in = RXQ0.0 RXQ1.0
+-pktq_out = SWQ1 SWQ2 SWQ0
+-
+-[PIPELINE4]
+-type = LOADB
+-core = 1
+-pktq_in = SWQ1 SWQ2
+-pktq_out = SWQ3 SWQ4
+-outport_offset = 136; 8
+-n_vnf_threads = 1
+-prv_que_handler = (0,)
+-
+-[PIPELINE5]
+-type = CGNAPT
+-core = 2
+-pktq_in = SWQ3 SWQ4
+-pktq_out = SWQ5 SWQ6
+-phyport_offset = 204
+-n_flows = 8192
+-key_offset = 192;64
+-key_size = 8
+-hash_offset = 200;72
+-timer_period = 100
+-max_clients_per_ip = 65535
+-max_port_per_client = 10
+-public_ip_port_range = 98103214:(1, 65535)
+-vnf_set = (3,4,5)
+-pkt_type = ipv4
+-cgnapt_meta_offset = 128
+-prv_que_handler = (0,)
+-
+-[PIPELINE6]
+-type = TXRX
+-core = 3
+-pipeline_txrx_type = TXTX
+-dest_if_offset = 176
+-pktq_in = SWQ5 SWQ6 SWQ7
+-pktq_out = TXQ0.0 TXQ1.0
+diff --git a/tools/vnf_build.sh b/tools/vnf_build.sh
+index 6c42263..aa4de7f 100755
+--- a/tools/vnf_build.sh
++++ b/tools/vnf_build.sh
+@@ -237,6 +237,8 @@ install_dpdk()
+ 			patch -p1 < $VNF_CORE/patches/dpdk_custom_patch/disable-acl-debug-logs.patch
+ 			patch -p1 < $VNF_CORE/patches/dpdk_custom_patch/set-log-level-to-info.patch
+ 	fi
++	echo "Apply dpdk custom patches for cgnat..."
++	patch -p1 < $VNF_CORE/patches/dpdk_custom_patch/nfp-driver-set-inport.patch
+ 
+ 	make EXTRA_CFLAGS="-O0 -g" -j1 install T=$RTE_TARGET
+ 	if [ $? -ne 0 ] ; then
+-- 
+2.7.4
+

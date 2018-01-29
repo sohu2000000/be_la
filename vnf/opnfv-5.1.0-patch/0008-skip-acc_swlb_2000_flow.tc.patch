@@ -1,0 +1,22 @@
+From 510410536a63bead2a7ff90928ff2ac22f20d892 Mon Sep 17 00:00:00 2001
+From: anlang <anlang@example.com>
+Date: Mon, 29 Jan 2018 10:08:12 +0800
+Subject: [PATCH 08/10] skip acc_swlb_2000_flow.tc
+
+---
+ .gitignore | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/.gitignore b/.gitignore
+index 717a879..858c491 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -10,4 +10,5 @@ acc_swlb_2port_2WT.cfg.out
+ civetweb/
+ dpdk-17.05.zip
+ dpdk/
++acc_swlb_2000_flow.tc
+ 
+-- 
+2.7.4
+

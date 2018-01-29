@@ -1,0 +1,32 @@
+From 65fdff923105a0f8d0833f13ae977c0fe0ab2f51 Mon Sep 17 00:00:00 2001
+From: anlang <anlang@example.com>
+Date: Wed, 24 Jan 2018 15:34:49 +0800
+Subject: [PATCH 02/10] add .gitignore file
+
+---
+ .gitignore | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+ create mode 100644 .gitignore
+
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..717a879
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1,13 @@
++.agree
++.download
++CivetWeb_V1.9.zip
++VNFs/DPPD-PROX/build/
++VNFs/UDP_Replay/build/
++VNFs/vACL/build/
++VNFs/vCGNAPT/build/
++VNFs/vFW/build/
++acc_swlb_2port_2WT.cfg.out
++civetweb/
++dpdk-17.05.zip
++dpdk/
++
+-- 
+2.7.4
+

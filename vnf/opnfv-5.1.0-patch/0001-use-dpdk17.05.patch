@@ -1,0 +1,191 @@
+From 6cd525bb0ab2c1ed463d0b7749e00e1e81181c4b Mon Sep 17 00:00:00 2001
+From: anlaneg <anlaneg@example.com>
+Date: Tue, 16 Jan 2018 13:59:18 +0800
+Subject: [PATCH 01/10] use dpdk17.05
+
+---
+ common/VIL/conntrack/rte_ct_synproxy.c |  2 +-
+ dpdk-devbind.sh                        | 15 ++++++++
+ sample_swlb_2port_1WT.cfg              | 65 ++++++++++++++++++++++++++++++++++
+ sample_swlb_2port_2WT.tc               | 27 ++++++++++++++
+ tools/vnf_build.sh                     |  8 ++---
+ 5 files changed, 112 insertions(+), 5 deletions(-)
+ create mode 100755 dpdk-devbind.sh
+ create mode 100644 sample_swlb_2port_1WT.cfg
+ create mode 100644 sample_swlb_2port_2WT.tc
+
+diff --git a/common/VIL/conntrack/rte_ct_synproxy.c b/common/VIL/conntrack/rte_ct_synproxy.c
+index 967596d..5f4666f 100644
+--- a/common/VIL/conntrack/rte_ct_synproxy.c
++++ b/common/VIL/conntrack/rte_ct_synproxy.c
+@@ -159,7 +159,7 @@ rte_sp_get_random_seq_number(void)
+ }
+ 
+ 
+-static int8_t rte_ct_ipversion(void *i_hdr)
++int8_t rte_ct_ipversion(void *i_hdr)
+ {
+ 	uint8_t *ihdr = (uint8_t *)i_hdr;
+ 	int8_t hdr_chk = *ihdr;
+diff --git a/dpdk-devbind.sh b/dpdk-devbind.sh
+new file mode 100755
+index 0000000..dfff619
+--- /dev/null
++++ b/dpdk-devbind.sh
+@@ -0,0 +1,15 @@
++#! /bin/bash
++ROOT=`pwd`
++dpdk_nic_bind=$ROOT/dpdk/usertools/dpdk-devbind.py
++nic_filter="Eth.*Copper"
++
++cfg_file="sample_swlb_2port_1WT.cfg"
++tc_file="sample_swlb_2port_2WT.tc"
++
++pci_list=`lspci | grep "$nic_filter" | cut -d ' ' -f 1  | tr "\n" " "`
++echo $pci_list
++sudo $dpdk_nic_bind -b igb_uio $pci_list
++sudo $dpdk_nic_bind --status
++
++gdb --args $ROOT/VNFs//vCGNAPT/build/vCGNAPT -p 0x3 -f $cfg_file  -s $tc_file
++
+diff --git a/sample_swlb_2port_1WT.cfg b/sample_swlb_2port_1WT.cfg
+new file mode 100644
+index 0000000..4a38ec0
+--- /dev/null
++++ b/sample_swlb_2port_1WT.cfg
+@@ -0,0 +1,65 @@
++[EAL]
++w = 00:08.0
++w = 00:09.1
++
++[PIPELINE0]
++type = MASTER
++core = 0
++
++[PIPELINE1]
++type = ARPICMP
++core = 1
++pktq_in = SWQ0
++pktq_out = SWQ7
++
++pktq_in_prv = RXQ0.0
++prv_to_pub_map = (0, 1)
++
++[PIPELINE2]
++type = TIMER
++core = 2
++n_flows = 8192
++
++[PIPELINE3]
++type = TXRX
++core = 3
++pipeline_txrx_type = RXRX
++dest_if_offset = 176
++pktq_in = RXQ0.0 RXQ1.0
++pktq_out = SWQ1 SWQ2 SWQ0
++
++[PIPELINE4]
++type = LOADB
++core = 1
++pktq_in = SWQ1 SWQ2
++pktq_out = SWQ3 SWQ4
++outport_offset = 136; 8
++n_vnf_threads = 1
++prv_que_handler = (0,)
++
++[PIPELINE5]
++type = CGNAPT
++core = 2
++pktq_in = SWQ3 SWQ4
++pktq_out = SWQ5 SWQ6
++phyport_offset = 204
++n_flows = 8192
++key_offset = 192;64
++key_size = 8
++hash_offset = 200;72
++timer_period = 100
++max_clients_per_ip = 65535
++max_port_per_client = 10
++public_ip_port_range = 98103214:(1, 65535)
++vnf_set = (3,4,5)
++pkt_type = ipv4
++cgnapt_meta_offset = 128
++prv_que_handler = (0,)
++
++[PIPELINE6]
++type = TXRX
++core = 3
++pipeline_txrx_type = TXTX
++dest_if_offset = 176
++pktq_in = SWQ5 SWQ6 SWQ7
++pktq_out = TXQ0.0 TXQ1.0
+diff --git a/sample_swlb_2port_2WT.tc b/sample_swlb_2port_2WT.tc
+new file mode 100644
+index 0000000..d746569
+--- /dev/null
++++ b/sample_swlb_2port_2WT.tc
+@@ -0,0 +1,27 @@
++
++link 0 down
++link 0 config 202.16.100.21 24
++link 0 up
++link 1 down
++link 1 config 172.16.40.21 24
++link 1 up
++
++
++; uncomment to enable static NAPT
++;p <cgnapt pipeline id> entry addm <prv_ipv4/6> prvport> <pub_ip> <pub_port> <phy_port> <ttl> <no_of_entries> <end_prv_port> <end_pub_port>
++;p 5 entry addm 202.16.100.20 1234 152.16.40.10 1 0 500 65535 1234 65535
++
++; uncomment below lines to enable static arp
++;p 1 arpadd 0 202.16.100.20 00:00:00:00:00:01
++;p 1 arpadd 1 172.16.40.20 00:00:00:00:00:02
++
++; uncomment below lines to enable static arp
++;p 1 arpadd 0 0064:ff9b:0:0:0:0:ca10:6414 00:00:00:00:00:01
++;p 1 arpadd 1 0064:ff9b:0:0:0:0:ac10:2814 00:00:00:00:00:02
++
++routeadd 0 202.16.100.20 0xff000000
++routeadd 1 172.16.40.20  0xff000000
++
++; routeadd <net/host> <port #> <ipv4 nhip address in decimal> <Mask/NotApplicable>
++;routeadd net 0 0064:ff9b:0:0:0:0:ca10:6414 64
++;routeadd net 1 0064:ff9b:0:0:0:0:ac10:6414 64
+diff --git a/tools/vnf_build.sh b/tools/vnf_build.sh
+index 0a085a6..6c42263 100755
+--- a/tools/vnf_build.sh
++++ b/tools/vnf_build.sh
+@@ -238,7 +238,7 @@ install_dpdk()
+ 			patch -p1 < $VNF_CORE/patches/dpdk_custom_patch/set-log-level-to-info.patch
+ 	fi
+ 
+-	make -j16 install T=$RTE_TARGET
++	make EXTRA_CFLAGS="-O0 -g" -j1 install T=$RTE_TARGET
+ 	if [ $? -ne 0 ] ; then
+ 		echo "Failed to build dpdk, please check the errors."
+ 		return
+@@ -263,9 +263,9 @@ install_dpdk()
+ setup_hugepages()
+ {
+ 	#----
+-	Pages=16
++	Pages=1
+ 	if [[ "$HUGEPGSZ" = "2048kB" ]] ; then
+-		Pages=8192
++		Pages=128
+ 	fi
+ 	if [ ! "`grep nr_hugepages /etc/sysctl.conf`" ] ; then
+ 		echo "vm.nr_hugepages=$Pages" | sudo tee /etc/sysctl.conf
+@@ -308,7 +308,7 @@ build_vnfs()
+ 	export RTE_TARGET=x86_64-native-linuxapp-gcc
+ 	pushd $VNF_CORE
+ 	make clean
+-	make || { echo -e "\nVNF: Make failed\n"; }
++	make EXTRA_CFLAGS="-O0 -g" || { echo -e "\nVNF: Make failed\n"; }
+ 	popd
+ }
+ 
+-- 
+2.7.4
+
