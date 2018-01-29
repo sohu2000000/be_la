@@ -7,6 +7,7 @@ submodule-update:
 
 build-vnf:
 	(cd samplevnf ; sudo ACC_LIB_PATH=$(ACC_LIB_PATH) ACC_INCLUDE_PATH="$(include_path)" ./Setup.sh ;)
+	#(cd samplevnf ; sudo ACC_LIB_PATH=$(ACC_LIB_PATH) ACC_INCLUDE_PATH="$(include_path)" ./build-vCGNAPT.sh ;)
 	
 build-cgnat-acc:
 	$(MAKE) -C cgnat-acc clean
