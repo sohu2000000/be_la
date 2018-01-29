@@ -1,7 +1,7 @@
 From 3df1520142bb06ee87e4a9debd968d4adf46116b Mon Sep 17 00:00:00 2001
 From: anlaneg <anlaneg@example.com>
 Date: Mon, 29 Jan 2018 14:16:06 +0800
-Subject: [PATCH 10/10] delete unuse file
+Subject: [PATCH 10/12] delete unuse file
 
 ---
  acc_swlb_2000_flow.tc    | 14 --------------

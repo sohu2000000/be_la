@@ -1,0 +1,297 @@
+From 4914f385b2f4fb409d1ecfd6b4b3e2e663aaed71 Mon Sep 17 00:00:00 2001
+From: anlaneg <anlaneg@example.com>
+Date: Mon, 29 Jan 2018 16:16:48 +0800
+Subject: [PATCH 12/12] add acc patch for cgnat
+
+---
+ VNFs/vCGNAPT/Makefile                      |   4 +
+ VNFs/vCGNAPT/pipeline/pipeline_cgnapt.c    |  48 ++++++++++++
+ VNFs/vCGNAPT/pipeline/pipeline_cgnapt_be.c | 116 +++++++++++++++++++++++++++++
+ 3 files changed, 168 insertions(+)
+
+diff --git a/VNFs/vCGNAPT/Makefile b/VNFs/vCGNAPT/Makefile
+index a3df57b..c6da5c9 100644
+--- a/VNFs/vCGNAPT/Makefile
++++ b/VNFs/vCGNAPT/Makefile
+@@ -57,6 +57,7 @@ INC += $(wildcard $(VNF_CORE)/common/VIL/conntrack/*.h)
+ INC += $(wildcard $(VNF_CORE)/common/VIL/alg/*.h)
+ INC += $(wildcard $(VNF_CORE)/common/VIL/gateway/*.h)
+ 
++
+ CFLAGS += -I$(SRCDIR) -mrtm -mhle -I$(SRCDIR)/pipeline -I$(VNF_CORE)/common/vnf_common
+ CFLAGS += -I$(VNF_CORE)/common/VIL/l2l3_stack -I$(VNF_CORE)/common/VIL/conntrack
+ CFLAGS += -I$(VNF_CORE)/common/VIL/pipeline_common -I$(VNF_CORE)/common/VIL/pipeline_loadb
+@@ -64,6 +65,7 @@ CFLAGS += -I$(VNF_CORE)/common/VIL/pipeline_master -I$(VNF_CORE)/common/VIL/pipe
+ CFLAGS += -I$(VNF_CORE)/common/VIL/pipeline_txrx -I$(VNF_CORE)/common/VIL/alg
+ CFLAGS += -I$(VNF_CORE)/common/VIL/pipeline_arpicmp
+ CFLAGS += -I$(VNF_CORE)/common/VIL/gateway
++CFLAGS += $(ACC_INCLUDE_PATH) 
+ 
+ TOP = $(RTE_SDK)/../civetweb
+ CFLAGS += -I$(TOP)/include $(COPT) -DUSE_WEBSOCKET -DUSE_IPV6 -DUSE_SSL_DH=1
+@@ -127,4 +129,6 @@ CFLAGS += -DCHECKSUM_REQ
+ #CFLAGS += -DCT_CGNAT
+ #CFLAGS += -DFTP_ALG
+ 
++_LDLIBS-y += $(ACC_LIB_PATH)
++
+ include $(RTE_SDK)/mk/rte.extapp.mk
+diff --git a/VNFs/vCGNAPT/pipeline/pipeline_cgnapt.c b/VNFs/vCGNAPT/pipeline/pipeline_cgnapt.c
+index 0c6bf48..25a4d1b 100644
+--- a/VNFs/vCGNAPT/pipeline/pipeline_cgnapt.c
++++ b/VNFs/vCGNAPT/pipeline/pipeline_cgnapt.c
+@@ -617,6 +617,52 @@ static cmdline_parse_inst_t cmd_entry_add = {
+ 			 },
+ };
+ 
++static cmdline_parse_token_string_t cmd_cgnat_acc_enable_string =
++TOKEN_STRING_INITIALIZER(struct cmd_entry_add_result, entry_string,
++                        "flow-accelerate-enable");
++
++int cgnat_flow_acc_enable = 0;
++
++static void
++cmd_cgnat_acc_enable_parsed(void *parsed_result,
++                                       struct cmdline *cl, void *data)
++{
++       cgnat_flow_acc_enable = 1;
++}
++
++static cmdline_parse_inst_t  cmd_cgnat_acc_enable= {
++       .f = cmd_cgnat_acc_enable_parsed,
++       .data = NULL,
++       .help_str = "vCGNAT flow accelerate enable",
++       .tokens = {
++                       (void *)&cmd_entry_add_p_string,
++                       (void *)&cmd_cgnat_acc_enable_string,
++                       NULL,
++       },
++};
++
++static void
++cmd_cgnat_acc_disable_parsed(void *parsed_result,
++                               struct cmdline *cl, void *data)
++{
++	cgnat_flow_acc_enable = 0;
++}
++
++static cmdline_parse_token_string_t cmd_cgnat_acc_disable_string =
++TOKEN_STRING_INITIALIZER(struct cmd_entry_add_result, entry_string,
++                        "flow-accelerate-disable");
++
++static cmdline_parse_inst_t  cmd_cgnat_acc_disable= {
++       .f = cmd_cgnat_acc_disable_parsed,
++       .data = NULL,
++       .help_str = "vCGNAT flow accelerate enable",
++       .tokens = {
++                       (void *)&cmd_entry_add_p_string,
++                       (void *)&cmd_cgnat_acc_disable_string,
++                       NULL,
++       },
++};
++
+ /**
+  * A structure defining the multiple entry add parse arguments.
+  */
+@@ -1726,6 +1772,8 @@ static cmdline_parse_ctx_t pipeline_cmds[] = {
+ 	#endif
+ 	(cmdline_parse_inst_t *) &cmd_stats,
+ 	(cmdline_parse_inst_t *) &cmd_clear_stats,
++	(cmdline_parse_inst_t *) &cmd_cgnat_acc_enable,
++	(cmdline_parse_inst_t *) &cmd_cgnat_acc_disable,
+ 	NULL,
+ };
+ 
+diff --git a/VNFs/vCGNAPT/pipeline/pipeline_cgnapt_be.c b/VNFs/vCGNAPT/pipeline/pipeline_cgnapt_be.c
+index 8a99b5f..e58e0d3 100644
+--- a/VNFs/vCGNAPT/pipeline/pipeline_cgnapt_be.c
++++ b/VNFs/vCGNAPT/pipeline/pipeline_cgnapt_be.c
+@@ -78,6 +78,8 @@
+ #include "cgnapt_pcp_be.h"
+ #endif
+ 
++#include "cgnapt_accelerate.h"
++
+ /* To maintain all cgnapt pipeline pointers used for all stats */
+ struct pipeline_cgnapt *all_pipeline_cgnapt[128];
+ uint8_t n_cgnapt_pipeline;
+@@ -3561,6 +3563,8 @@ pkt_work_cgnapt_key_ipv4_pub(
+ }
+ 
+ 
++extern int cgnat_flow_acc_enable;
++
+ /**
+  * NAPT function for IPv4 private traffic which handles 1 pkt
+  *
+@@ -3737,6 +3741,12 @@ pkt_work_cgnapt_ipv4_prv(
+ 
+ 	*outport_id = p_nat->outport_id[dest_if];
+ 
++	//save old ether header
++	uint8_t srcmac[6];
++	uint8_t dstmac[6];
++	memcpy(dstmac,eth_dest,sizeof(dstmac));
++	memcpy(srcmac,eth_src,sizeof(srcmac));
++
+ 	if (arp_cache_dest_mac_present(dest_if)) {
+ 		ether_addr_copy(get_link_hw_addr(dest_if),(struct ether_addr *)eth_src);
+ 		update_nhip_access(dest_if);
+@@ -3786,6 +3796,28 @@ pkt_work_cgnapt_ipv4_prv(
+ 
+ 	}
+ 
++	if(cgnat_flow_acc_enable)
++	{
++	   struct acc_flow cgnat_flow;
++	   uint16_t current_src_port = rte_bswap16(*src_port);
++	   uint32_t xlate_addr = rte_bswap32(entry->data.pub_ip);
++	   memset(&cgnat_flow,0,sizeof(cgnat_flow));
++
++	   acc_match_field_set(&(cgnat_flow.match),&(cgnat_flow.mask),srcmac,(srcmac));
++	   acc_match_field_set(&(cgnat_flow.match),&(cgnat_flow.mask),dstmac,(dstmac));
++	   acc_match_field_set(&(cgnat_flow.match),&(cgnat_flow.mask),src_ip,(*src_addr));
++	   acc_match_field_set(&(cgnat_flow.match),&(cgnat_flow.mask),src_port,current_src_port);
++	   acc_match_field_set(&(cgnat_flow.match),&(cgnat_flow.mask),protocol,(protocol));
++
++	   acc_action_field_set(&(cgnat_flow.action),srcmac,(*eth_src));
++	   acc_action_field_set(&(cgnat_flow.action),dstmac,(*eth_dest));
++	   acc_action_field_set(&(cgnat_flow.action),src_ip,xlate_addr);
++	   acc_action_field_set(&(cgnat_flow.action),src_port,(entry->data.pub_port));
++
++	   printf("***************Dest MAC after - %02x:%02x:%02x:%02x:%02x:%02x\n", eth_src[0], eth_src[1], eth_src[2], eth_src[3], eth_src[4], eth_src[5]);
++		cgnat_accelerate(&p_nat->p,&cgnat_flow);
++	}
++
+ 	{
+ 		/* Egress */
+ 		*src_addr = rte_bswap32(entry->data.pub_ip);
+@@ -4089,6 +4121,12 @@ pkt_work_cgnapt_ipv4_pub(
+ 			(struct ether_addr *)eth_dest);
+ 	*outport_id = p_nat->outport_id[dest_if];
+ 
++	//save old ether header
++	uint8_t srcmac[6];
++	uint8_t dstmac[6];
++	memcpy(dstmac,eth_dest,sizeof(dstmac));
++	memcpy(srcmac,eth_src,sizeof(srcmac));
++
+ 	if (arp_cache_dest_mac_present(dest_if)) {
+ 		ether_addr_copy(get_link_hw_addr(dest_if), (struct ether_addr *)eth_src);
+ 		update_nhip_access(dest_if);
+@@ -4142,6 +4180,28 @@ pkt_work_cgnapt_ipv4_pub(
+ 		}
+ 	}
+ 
++    if(cgnat_flow_acc_enable)
++    {
++	   struct acc_flow cgnat_flow;
++	   uint16_t current_dst_port = rte_bswap16(*dst_port);
++	   uint32_t xlate_addr = rte_bswap32(entry->data.u.prv_ip);
++	   memset(&cgnat_flow,0,sizeof(cgnat_flow));
++
++	   acc_match_field_set(&(cgnat_flow.match),&(cgnat_flow.mask),srcmac,(srcmac));
++	   acc_match_field_set(&(cgnat_flow.match),&(cgnat_flow.mask),dstmac,(dstmac));
++	   acc_match_field_set(&(cgnat_flow.match),&(cgnat_flow.mask),dst_ip,(*dst_addr));
++	   acc_match_field_set(&(cgnat_flow.match),&(cgnat_flow.mask),dst_port,current_dst_port);
++	   acc_match_field_set(&(cgnat_flow.match),&(cgnat_flow.mask),protocol,(protocol));
++
++	   acc_action_field_set(&(cgnat_flow.action),srcmac,(*eth_src));
++	   acc_action_field_set(&(cgnat_flow.action),dstmac,(*eth_dest));
++	   acc_action_field_set(&(cgnat_flow.action),dst_ip,xlate_addr);
++	   acc_action_field_set(&(cgnat_flow.action),dst_port,(entry->data.prv_port));
++
++	   printf("***************Dest MAC after - %02x:%02x:%02x:%02x:%02x:%02x\n", eth_src[0], eth_src[1], eth_src[2], eth_src[3], eth_src[4], eth_src[5]);
++		cgnat_accelerate(&p_nat->p,&cgnat_flow);
++    }
++
+ 	{
+ 		/* Ingress */
+ 
+@@ -4539,6 +4599,12 @@ pkt4_work_cgnapt_ipv4_prv(
+ 
+ 		*outport_id = p_nat->outport_id[dest_if];
+ 
++		//save older ether header
++		uint8_t srcmac[6];
++		uint8_t dstmac[6];
++		memcpy(dstmac,eth_dest,sizeof(dstmac));
++	    memcpy(srcmac,eth_src,sizeof(srcmac));
++
+ 		if (arp_cache_dest_mac_present(dest_if)) {
+ 			ether_addr_copy(get_link_hw_addr(dest_if),
+ 				 (struct ether_addr *)eth_src);
+@@ -4590,6 +4656,28 @@ pkt4_work_cgnapt_ipv4_prv(
+ 			}
+ 		}
+ 
++	    if(cgnat_flow_acc_enable)
++	    {
++		   struct acc_flow cgnat_flow;
++		   uint16_t current_src_port = rte_bswap16(*src_port);
++		   uint32_t xlate_addr = rte_bswap32(entry->data.pub_ip);
++		   memset(&cgnat_flow,0,sizeof(cgnat_flow));
++
++		   acc_match_field_set(&(cgnat_flow.match),&(cgnat_flow.mask),srcmac,(srcmac));
++		   acc_match_field_set(&(cgnat_flow.match),&(cgnat_flow.mask),dstmac,(dstmac));
++		   acc_match_field_set(&(cgnat_flow.match),&(cgnat_flow.mask),src_ip,(*src_addr));
++		   acc_match_field_set(&(cgnat_flow.match),&(cgnat_flow.mask),src_port,current_src_port);
++		   acc_match_field_set(&(cgnat_flow.match),&(cgnat_flow.mask),protocol,(protocol));
++
++		   acc_action_field_set(&(cgnat_flow.action),srcmac,(*eth_src));
++		   acc_action_field_set(&(cgnat_flow.action),dstmac,(*eth_dest));
++		   acc_action_field_set(&(cgnat_flow.action),src_ip,xlate_addr);
++		   acc_action_field_set(&(cgnat_flow.action),src_port,(entry->data.pub_port));
++
++		   printf("***************Dest MAC after - %02x:%02x:%02x:%02x:%02x:%02x\n", eth_src[0], eth_src[1], eth_src[2], eth_src[3], eth_src[4], eth_src[5]);
++		   cgnat_accelerate(&p_nat->p,&cgnat_flow);
++	    }
++
+ 		{
+ 			/* Egress */
+ 			*src_addr = rte_bswap32(entry->data.pub_ip);
+@@ -4909,6 +4997,12 @@ pkt4_work_cgnapt_ipv4_pub(
+ 
+ 		*outport_id = p_nat->outport_id[dest_if];
+ 
++		//save older ether header
++		uint8_t srcmac[6];
++		uint8_t dstmac[6];
++		memcpy(dstmac,eth_dest,sizeof(dstmac));
++		memcpy(srcmac,eth_src,sizeof(srcmac));
++
+ 		if (arp_cache_dest_mac_present(dest_if)) {
+ 			ether_addr_copy(get_link_hw_addr(dest_if),
+ 					(struct ether_addr *)eth_src);
+@@ -4959,6 +5053,28 @@ pkt4_work_cgnapt_ipv4_pub(
+ 		}
+ 	}
+ 
++    if(cgnat_flow_acc_enable)
++    {
++	   struct acc_flow cgnat_flow;
++	   uint16_t current_dst_port = rte_bswap16(*dst_port);
++	   uint32_t xlate_addr = rte_bswap32(entry->data.u.prv_ip);
++	   memset(&cgnat_flow,0,sizeof(cgnat_flow));
++
++	   acc_match_field_set(&(cgnat_flow.match),&(cgnat_flow.mask),srcmac,(srcmac));
++	   acc_match_field_set(&(cgnat_flow.match),&(cgnat_flow.mask),dstmac,(dstmac));
++	   acc_match_field_set(&(cgnat_flow.match),&(cgnat_flow.mask),dst_ip,(*dst_addr));
++	   acc_match_field_set(&(cgnat_flow.match),&(cgnat_flow.mask),dst_port,current_dst_port);
++	   acc_match_field_set(&(cgnat_flow.match),&(cgnat_flow.mask),protocol,(protocol));
++
++	   acc_action_field_set(&(cgnat_flow.action),srcmac,(*eth_src));
++	   acc_action_field_set(&(cgnat_flow.action),dstmac,(*eth_dest));
++	   acc_action_field_set(&(cgnat_flow.action),dst_ip,xlate_addr);
++	   acc_action_field_set(&(cgnat_flow.action),dst_port,(entry->data.prv_port));
++
++	   printf("***************Dest MAC after - %02x:%02x:%02x:%02x:%02x:%02x\n", eth_src[0], eth_src[1], eth_src[2], eth_src[3], eth_src[4], eth_src[5]);
++	   cgnat_accelerate(&p_nat->p,&cgnat_flow);
++     }
++
+ 		{
+ 			/* Ingress */
+ 
+-- 
+2.7.4
+

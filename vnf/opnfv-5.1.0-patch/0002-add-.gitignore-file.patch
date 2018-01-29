@@ -1,7 +1,7 @@
 From 65fdff923105a0f8d0833f13ae977c0fe0ab2f51 Mon Sep 17 00:00:00 2001
 From: anlang <anlang@example.com>
 Date: Wed, 24 Jan 2018 15:34:49 +0800
-Subject: [PATCH 02/10] add .gitignore file
+Subject: [PATCH 02/12] add .gitignore file
 
 ---
  .gitignore | 13 +++++++++++++
