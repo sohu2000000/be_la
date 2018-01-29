@@ -1,7 +1,7 @@
 From e5dcfac739bc417e28f7ef887f0144a9e3a6152e Mon Sep 17 00:00:00 2001
 From: anlang <anlang@example.com>
 Date: Fri, 26 Jan 2018 17:24:27 +0800
-Subject: [PATCH 04/12] 1.fix vCGNAPT bug;2.fix cavium nic set mtu fail
+Subject: [PATCH 04/13] 1.fix vCGNAPT bug;2.fix cavium nic set mtu fail
 
 ---
  Makefile                                           |   8 +-

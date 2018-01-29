@@ -1,7 +1,7 @@
 From b5ba929c918d83985fc8fe762b0318e709c11de6 Mon Sep 17 00:00:00 2001
 From: anlang <anlang@example.com>
 Date: Fri, 26 Jan 2018 18:15:23 +0800
-Subject: [PATCH 06/12] add cavium config
+Subject: [PATCH 06/13] add cavium config
 
 ---
  acc_swlb_2port_2WT.cfg        | 125 ------------------------------------------

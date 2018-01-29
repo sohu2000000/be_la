@@ -1,7 +1,7 @@
 From 4914f385b2f4fb409d1ecfd6b4b3e2e663aaed71 Mon Sep 17 00:00:00 2001
 From: anlaneg <anlaneg@example.com>
 Date: Mon, 29 Jan 2018 16:16:48 +0800
-Subject: [PATCH 12/12] add acc patch for cgnat
+Subject: [PATCH 12/13] add acc patch for cgnat
 
 ---
  VNFs/vCGNAPT/Makefile                      |   4 +

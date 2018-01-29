@@ -1,7 +1,7 @@
 From f94c47a65ffc48ce829274a0b27db867c8ec94fa Mon Sep 17 00:00:00 2001
 From: anlang <anlang@example.com>
 Date: Wed, 24 Jan 2018 15:36:42 +0800
-Subject: [PATCH 03/12] add script;2.add nfp patch
+Subject: [PATCH 03/13] add script;2.add nfp patch
 
 ---
  acc_swlb_2000_flow.tc                              |  14 +++
