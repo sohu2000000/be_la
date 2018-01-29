@@ -1,7 +1,7 @@
 From b82343ba8aaaa9e79bb634096ed18bb525dd4321 Mon Sep 17 00:00:00 2001
 From: anlang <anlang@example.com>
 Date: Mon, 29 Jan 2018 15:33:10 +0800
-Subject: [PATCH 11/13] 1.update netronome;2.update build script
+Subject: [PATCH 11/14] 1.update netronome;2.update build script
 
 ---
  build-vCGNAPT.sh                 |   2 +-

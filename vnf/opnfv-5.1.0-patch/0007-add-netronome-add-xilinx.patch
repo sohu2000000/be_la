@@ -1,7 +1,7 @@
 From a7a307c9d2a249fa7e5ce9f8b43631c1a1136e9a Mon Sep 17 00:00:00 2001
 From: anlang <anlang@example.com>
 Date: Mon, 29 Jan 2018 10:06:35 +0800
-Subject: [PATCH 07/13] add netronome; add xilinx
+Subject: [PATCH 07/14] add netronome; add xilinx
 
 ---
  netrnome/gen-flow-common.sh | 12 ++++++++++++

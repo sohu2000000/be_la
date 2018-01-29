@@ -1,7 +1,7 @@
 From 66c0a0b32d8a3477e413706b7fe6254e44eb16b0 Mon Sep 17 00:00:00 2001
 From: anlaneg <anlaneg@example.com>
 Date: Mon, 29 Jan 2018 16:45:22 +0800
-Subject: [PATCH 13/13] remove sudo
+Subject: [PATCH 13/14] remove sudo
 
 ---
  Setup.sh | 7 ++++++-

@@ -1,7 +1,7 @@
 From c8f919ed3854d307cee1e52e2c010b271f5ef9eb Mon Sep 17 00:00:00 2001
 From: anlang <anlang@example.com>
 Date: Fri, 26 Jan 2018 17:25:58 +0800
-Subject: [PATCH 05/13] add help script
+Subject: [PATCH 05/14] add help script
 
 ---
  build-vCGNAPT.sh | 7 +++++++

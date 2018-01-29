@@ -1,7 +1,7 @@
 From 510410536a63bead2a7ff90928ff2ac22f20d892 Mon Sep 17 00:00:00 2001
 From: anlang <anlang@example.com>
 Date: Mon, 29 Jan 2018 10:08:12 +0800
-Subject: [PATCH 08/13] skip acc_swlb_2000_flow.tc
+Subject: [PATCH 08/14] skip acc_swlb_2000_flow.tc
 
 ---
  .gitignore | 1 +

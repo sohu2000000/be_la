@@ -1,7 +1,7 @@
 From 6cd525bb0ab2c1ed463d0b7749e00e1e81181c4b Mon Sep 17 00:00:00 2001
 From: anlaneg <anlaneg@example.com>
 Date: Tue, 16 Jan 2018 13:59:18 +0800
-Subject: [PATCH 01/13] use dpdk17.05
+Subject: [PATCH 01/14] use dpdk17.05
 
 ---
  common/VIL/conntrack/rte_ct_synproxy.c |  2 +-
