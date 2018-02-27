@@ -2,6 +2,7 @@
 .project
 .settings/
 *.o
+*.d
 libcgnatacc.a
 be_la/be_main
 lib/libevent-2.0.22-stable.tar.gz
