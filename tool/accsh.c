@@ -51,13 +51,14 @@ static void usage(void){
     fprintf(stderr, "Usage: \n");
     fprintf(stderr, "\t <-r, --register>          register an acc card \n");    
     fprintf(stderr, "\t <-R, --unregister>        unregister an acc card \n");
-    fprintf(stderr, "\t <-v, --vendor>            acc card vendor: <netronome | xilinx> \n");
-    fprintf(stderr, "\t <-m, --model>             acc card product: <agilio_isa_4000 | vu3p | vu9p> \n");
+    fprintf(stderr, "\t <-v, --vendor>            acc card vendor: <netronome | cavium | xilinx> \n");
+    fprintf(stderr, "\t <-m, --model>             acc card product: <agilio_isa_4000 | liquidio | vu3p | vu9p> \n");
     fprintf(stderr, "\t <-u, --uuid>              vm uuid which to use this channel\n");
     fprintf(stderr, "\t <-c, --channel>           channel path\n");    
     fprintf(stderr, "\t <-t, --type>              acc type: <flow | compress>\n");
     fprintf(stderr, "Example: \n");
-    fprintf(stderr, "\taccsh -r -v netronome -m agilio_isa_4000 -u 4dea22b3-1d52-d8f3-2516-782e98000000 -c /tmp/vaccla -t flow -t compress\n");
+    fprintf(stderr, "\t./accsh -r -v netronome -m agilio_isa_4000 -u 4dea22b3-1d52-d8f3-2516-782e98000000 -c /tmp/vaccla -t flow -t compress\n");
+    fprintf(stderr, "\t./accsh -r -v cavium -m liquidio -u 4dea22b3-1d52-d8f3-2516-782e98000011 -c /tmp/other_vaccla -t flow\n");
 }
 
 /******************************************************************************
@@ -110,13 +111,23 @@ int main(int argc, char** argv) {
                 printf("optarg = %s\n", optarg);
                 cmd->card.vendor = VENDOR_NETRONOME;
             }
+            else if (0 == strcmp(optarg,"cavium")){
+            	printf("c = %c\n",c);
+            	printf("optarg = %s\n", optarg);
+            	cmd->card.vendor = VENDOR_CAVIUM;
+            }
             break;
         case 'm':
             if(0 == strcmp(optarg,"agilio_isa_4000")){
                 printf("c = %c\n",c);
                 printf("optarg = %s\n", optarg);
                 cmd->card.model = AGILIO_ISA_4000;
-            }            
+            }
+            else if( 0 == strcmp(optarg,"liquidio")){
+            	printf("c = %c\n",c);
+            	printf("optarg = %s\n", optarg);
+            	cmd->card.model = LIQUIDIO_II;
+            }
             break;
         case 'c':
             if(optarg[0] != '\0'){
