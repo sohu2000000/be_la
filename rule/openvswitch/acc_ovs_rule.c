@@ -196,9 +196,9 @@ static inline int execute_openflow_rule(struct acc_context*state, char*rule) {
 	//ACC_LOG("execute :%s\n", rule);
 	if (state->ssh_remote) {
 		struct ssh_remote_execute* remote = state->ssh_remote;
-		ACC_LOG("execute: ssh -p %d %s@%s '%s'",remote->username,remote->port,remote->remote_ip,rule);
+		ACC_LOG("execute: ssh -p %d %s@%s '%s'",remote->port,remote->username,remote->remote_ip,rule);
 		if (ssh_remote_exec(remote->remote_ip, remote->username, remote->port,
-				remote->password, rule)) {
+				remote->password,remote->env, rule)) {
 			ACC_ERROR("execute command line '%s' fail!\n", rule);
 			return -1;
 		}

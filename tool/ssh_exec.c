@@ -32,10 +32,10 @@ int main(int argc,char**argv) {
 	     "which ovs-ofctl;"
 	     "ovs-vsctl del-br br0;"
 	     "ovs-vsctl add-br br0;"
-	     "ovs-vsctl add-port br0 enp6s0f3;"//sender
-	     "ovs-vsctl add-port br0 enp6s0f4;"//cgnat-0
-	     "ovs-vsctl add-port br0 enp6s0f5;"//cgnat-1
-	     "ovs-vsctl add-port br0 enp6s0f6;"//receiver
+	     "ovs-vsctl add-port br0 enp6s8f3;"//sender
+	     "ovs-vsctl add-port br0 enp6s8f4;"//cgnat-0
+	     "ovs-vsctl add-port br0 enp6s8f5;"//cgnat-1
+	     "ovs-vsctl add-port br0 enp6s8f6;"//receiver
 	     //normal action
 	     "ovs-ofctl add-flows br0 'priority=0,actions=normal';" 
 	     "ovs-vsctl show ;"

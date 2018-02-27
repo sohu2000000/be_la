@@ -56,6 +56,7 @@ void* acc_liquidio_context_init(struct be_acc_card_*card)
 	remote->port=22;
 	remote->remote_ip="169.254.1.1";
 	remote->username="root";
+    remote->env="PATH=\"$PATH:/usr/ovs/bin/\";";
 
 	context = acc_context_alloc();
 	if(!context)

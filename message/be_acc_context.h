@@ -13,6 +13,7 @@ struct ssh_remote_execute
 	char*remote_ip;
 	char*username;
 	char*password;
+    char*env;
 	int port;
 };
 

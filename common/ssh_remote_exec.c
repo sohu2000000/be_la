@@ -27,12 +27,13 @@ void message_error(ssh_session session,char*message) {
 	free_session(session);
 }
 
-int ssh_remote_exec(char*remote_ip, char*username,int port, char*password, char*cmd) {
+int ssh_remote_exec(char*remote_ip, char*username,int port, char*password,char*env, char*cmd) {
 
 	ssh_session session;
 	ssh_channel channel;
-	int rc;
+	int rc, ret = -1;
 	char buffer[1024];
+    char cmd_buf[4096];
 	unsigned int nbytes;
 
 	session = ssh_new();
@@ -49,35 +50,42 @@ int ssh_remote_exec(char*remote_ip, char*username,int port, char*password, char*
 	if (rc != SSH_OK)
 	{
 		message_error(session,"connect to remote fail");
-		return -1;
+        goto FREE_SESSION;
 	}
 
 	rc = ssh_userauth_password(session, NULL,password);
 	if (rc != SSH_AUTH_SUCCESS)
 	{
 		message_error(session,"Autentication fail");
-		return -1;
+        goto FREE_SESSION;
 	}
 
 	channel = ssh_channel_new(session);
 	if (channel == NULL)
 	{
 		message_error(session,"create channel fail");
-		return -1;
+        goto FREE_SESSION;
 	}
 
 	rc = ssh_channel_open_session(channel);
 	if (rc != SSH_OK)
 	{
 		message_error(session,"open channel fail");
-		return -1;
+        goto FREE_CHANNEL;
 	}
 
-	rc = ssh_channel_request_exec(channel, cmd);
+    //if(env  && (rc = ssh_channel_request_exec(channel, env)) != SSH_OK)
+    //{
+	//	message_error(session,"executing remote enviroment fail");
+    //   goto FREE_CHANNEL;
+    //}
+
+    snprintf(cmd_buf,4093,"%s %s",env,cmd);
+	rc = ssh_channel_request_exec(channel, cmd_buf);
 	if (rc != SSH_OK)
 	{
 		message_error(session,"executing remote command fail");
-		return -1;
+        goto FREE_CHANNEL;
 	}
 
 	//rc = ssh_channel_get_exit_status(channel);
@@ -99,8 +107,11 @@ int ssh_remote_exec(char*remote_ip, char*username,int port, char*password, char*
 			nbytes = ssh_channel_read(channel, buffer, sizeof(buffer), 1);
 	}
 
+    ret = 0;
+FREE_CHANNEL:
 	free_channel(channel);
+FREE_SESSION:
 	free_session(session);
 
-	return 0;
+	return ret;
 }
